@@ -268,6 +268,7 @@
           <button id="age-adult" type="button" disabled>Prove it (DOB 1999 — qualifies)</button>
           <button id="age-minor" type="button" disabled>Try honestly with a 2010 DOB</button>
           <button id="age-forge" type="button" disabled>Force a forged under-18 proof</button>
+          <button id="age-cancel" type="button" hidden>Cancel this proof</button>
         </div>
         <div id="age-out" class="exhibit-out"></div>
       </section>
@@ -290,6 +291,52 @@
           "my bit is 0" in zero knowledge, repairing this — that machinery is out of scope here and the tension is
           <strong>not solved</strong> by the status list you just used.
         </p>
+        <details>
+          <summary>The three revocation designs, and what each one costs</summary>
+          <div class="table-wrap" role="region" aria-label="Comparison of revocation approaches" tabindex="0">
+            <table>
+              <caption class="visually-hidden">
+                Comparison of revocation approaches: what the verifier learns and what it costs
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Approach</th>
+                  <th scope="col">How it works</th>
+                  <th scope="col">Verifier learns</th>
+                  <th scope="col">The cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Status list (this exhibit)</th>
+                  <td>Issuer publishes one bit per credential; verifier reads bit <em>i</em></td>
+                  <td>Your stable index <em>i</em>, forever</td>
+                  <td>Unlinkability is gone — the index re-links every presentation the crypto just unlinked</td>
+                </tr>
+                <tr>
+                  <th scope="row">Issuer-online check</th>
+                  <td>Verifier (or holder) asks the issuer "is this one still good?" per presentation</td>
+                  <td>Nothing extra — but the <em>issuer</em> sees every place the credential is used</td>
+                  <td>Trades verifier correlation for an issuer who can log, profile, or veto every showing; issuer availability becomes a liveness dependency</td>
+                </tr>
+                <tr>
+                  <th scope="row">ZK accumulator membership</th>
+                  <td>Issuer maintains a cryptographic accumulator of non-revoked credentials; holder proves membership in zero knowledge inside the presentation</td>
+                  <td>One bit: "not revoked", with no index and no callback</td>
+                  <td>Real machinery — pairing-based accumulators with per-epoch witness updates every holder must fetch (a fetch pattern that itself needs care, e.g. via PIR or broadcast), plus more prover time</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            What a privacy-preserving deployment would actually require, in one breath: an accumulator commitment
+            in each epoch's issuer bulletin, a membership witness per credential that updates when <em>anyone</em>
+            is revoked, a ZK proof of that witness linked into the BBS presentation the same way this lab links
+            its age predicate — and a story for how holders fetch witness updates without the fetch itself becoming
+            the tracking signal. Each piece exists in the literature; the honest point of this exhibit is that
+            none of them is free, and a deployment that skips them silently lands back on this page's status list.
+          </p>
+        </details>
       </section>
 
       <section class="panel" aria-labelledby="compare-h">

@@ -1,0 +1,8 @@
+# Default owner for everything in the repo — review accountability for a
+# single-maintainer project is still worth making explicit.
+* @systemslibrarian
+
+# Cryptographic core: changes here must keep docs/design-note.md in sync.
+/src/bbs/ @systemslibrarian
+/src/predicate/ @systemslibrarian
+/docs/ @systemslibrarian

@@ -95,7 +95,14 @@ const pHex = (p: G1Point) => bytesToHex(pointToOctetsG1(p))
  * cheating prover would try); the resulting proof is mathematically doomed:
  * the bit-sum consistency check cannot be satisfied for the wrong v.
  */
-export function proveAge(cred: BbsCredential, cutoff: number, opts: { forge?: boolean } = {}): AgeProof {
+/** Coarse progress hook for long-running proof work (UI only — no crypto role). */
+export type StageFn = (stage: string) => void
+
+export function proveAge(
+  cred: BbsCredential,
+  cutoff: number,
+  opts: { forge?: boolean; onStage?: StageFn } = {},
+): AgeProof {
   const dobDays = Number(cred.scalars[DOB_INDEX])
   const trueV = cutoff - dobDays
   if (!opts.forge && (trueV < 0 || trueV >= 2 ** N_BITS)) {
@@ -120,6 +127,7 @@ export function proveAge(cred: BbsCredential, cutoff: number, opts: { forge?: bo
   const C = mul(G_P, cred.scalars[DOB_INDEX]).add(mul(H_P, rc))
   const T3 = mul(G_P, mTildeDob).add(mul(H_P, rcTilde))
 
+  opts.onStage?.(`committing ${N_BITS} bits of the age difference`)
   // bit commitments + OR-proof material
   const bitVals: number[] = []
   const bitBlinds: bigint[] = []
@@ -151,6 +159,7 @@ export function proveAge(cred: BbsCredential, cutoff: number, opts: { forge?: bo
   const TDelta = mul(H_P, deltaTilde)
 
   // one Fiat-Shamir challenge over the BBS transcript AND the predicate transcript
+  opts.onStage?.('building the linked BBS transcript')
   const initRes = proofInit(cred.issuerPk, sig, generators, randomScalars, cred.header, cred.scalars, undisclosed, API_ID)
   const extra = challengeExtras(C, T3, TDelta, bitCommits, aCommits, cutoff)
   const ph = new Uint8Array() // predicate presentations carry their context in `extra`
@@ -216,7 +225,7 @@ export interface AgeVerdict {
 }
 
 /** Verify against the issuer public key and the verifier's OWN cutoff. */
-export function verifyAge(issuerPk: Uint8Array, proof: AgeProof, cutoff: number): AgeVerdict {
+export function verifyAge(issuerPk: Uint8Array, proof: AgeProof, cutoff: number, onStage?: StageFn): AgeVerdict {
   const fail = (reason: string): AgeVerdict => ({
     ok: false,
     bbsChallengeOk: false,
@@ -244,6 +253,7 @@ export function verifyAge(issuerPk: Uint8Array, proof: AgeProof, cutoff: number)
     const mHatDob = parsed.mHat[DOB_INDEX] // nothing disclosed => positions match field order
     const T3 = mul(G_P, mHatDob).add(mul(H_P, rcHat)).subtract(mul(C, c))
 
+    onStage?.('recomputing bit commitments')
     // Recompute bit commitments' OR-proof a-values; track the weighted sum.
     const bitCommits: G1Point[] = []
     const aCommits: [G1Point, G1Point][] = []
@@ -271,6 +281,7 @@ export function verifyAge(issuerPk: Uint8Array, proof: AgeProof, cutoff: number)
     const challenge = proofChallenge(initRes, [], [], new Uint8Array(), API_ID, extra)
 
     const bbsChallengeOk = challenge === c
+    onStage?.('checking the pairing')
     const pairingOk = pairingProductIsIdentity(
       parsed.Abar,
       W,

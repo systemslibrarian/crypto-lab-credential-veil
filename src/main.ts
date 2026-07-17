@@ -4,19 +4,14 @@ import {
   FIELD_KEYS,
   FIELD_LABELS,
   cutoffDays,
-  issueBbs,
-  newIssuer,
-  present,
-  verifyPresentation,
-  type BbsCredential,
-  type BbsIssuer,
   type CredentialFields,
   type FieldKey,
   type Presentation,
 } from './credential/credential'
-import { issueEd25519, randomEd25519SecretKey, verifyEd25519, type Ed25519Credential } from './baseline/ed25519'
-import { proveAge, verifyAge, N_BITS } from './predicate/ageProof'
+import { N_BITS, type AgeProof, type AgeVerdict } from './predicate/ageProof'
 import { StatusList } from './revocation/statusList'
+import { CancelledError, CryptoClient } from './worker/client'
+import type { SetupResult } from './worker/cryptoWorker'
 
 // ---------------------------------------------------------------------------
 // tiny DOM helpers
@@ -88,8 +83,35 @@ function statusLine(text: string): HTMLElement {
   return el('p', { class: 'status-line', role: 'status' }, [text])
 }
 
+/**
+ * Run one exhibit action with a busy button that ALWAYS recovers: cancel and
+ * worker failures render into `out` instead of leaving a stuck button. The
+ * crypto client self-heals (respawn + one retry) before an error reaches here.
+ */
+async function guarded(out: HTMLElement, button: HTMLButtonElement, busyText: string, work: () => Promise<void>): Promise<void> {
+  const done = setBusy(button, busyText)
+  try {
+    await work()
+  } catch (err) {
+    if (err instanceof CancelledError) {
+      out.replaceChildren(statusLine('Cancelled — the worker was stopped mid-proof; nothing was produced.'))
+    } else {
+      out.replaceChildren(
+        statusLine(
+          `The crypto worker failed (${err instanceof Error ? err.message : String(err)}). ` +
+            'A fresh worker has been started — try the button again.',
+        ),
+      )
+    }
+  } finally {
+    done()
+  }
+}
+
 // ---------------------------------------------------------------------------
-// demo state (all per-session, in memory only)
+// demo state (all per-session, in memory only). The cryptography itself runs
+// in a Web Worker (src/worker/) so multi-second pairing math never freezes
+// this page; the state below is plain data, structured-cloned per call.
 // ---------------------------------------------------------------------------
 
 const ADULT_FIELDS: CredentialFields = {
@@ -111,14 +133,9 @@ const cutoffIso = (() => {
   return c.toISOString().slice(0, 10)
 })()
 
-interface DemoState {
-  issuer: BbsIssuer
-  adult: BbsCredential
-  minor: BbsCredential
-  baseline: Ed25519Credential
-}
+const client = new CryptoClient()
 
-let state: DemoState | null = null
+let state: SetupResult | null = null
 let lastPresentation: Presentation | null = null
 
 // ---------------------------------------------------------------------------
@@ -151,16 +168,11 @@ async function setup(): Promise<void> {
   renderFieldPicker()
   const status = byId('setup-status')
   await nextFrame()
-  const issuer = newIssuer()
-  status.textContent = 'Issuer keys ready. Signing the credential with BBS (six messages, one signature)…'
-  await nextFrame()
-  const adult = issueBbs(issuer, ADULT_FIELDS)
-  const minor = issueBbs(issuer, MINOR_FIELDS)
-  const baseline = issueEd25519(ADULT_FIELDS, randomEd25519SecretKey())
-  state = { issuer, adult, minor, baseline }
+  status.textContent = 'Generating issuer keys and signing the credential with BBS (six messages, one signature)…'
+  state = await client.call<SetupResult>('setup', [ADULT_FIELDS, MINOR_FIELDS])
   status.textContent =
     'Ready. BBS signature (one signature over all six fields): ' +
-    bytesToHex(adult.signature).slice(0, 32) +
+    bytesToHex(state.adult.signature).slice(0, 32) +
     '… (80 bytes). Ed25519 baseline signature also issued. Keys live only in this tab.'
   for (const id of ['baseline-run', 'sd-run', 'sd-step', 'unlink-bbs', 'unlink-ed', 'age-adult', 'age-minor', 'age-forge']) {
     byId<HTMLButtonElement>(id).disabled = false
@@ -174,11 +186,10 @@ async function setup(): Promise<void> {
 function wireBaseline(): void {
   byId<HTMLButtonElement>('baseline-run').addEventListener('click', async (ev) => {
     if (!state) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Verifying…')
-    await nextFrame()
-    const { baseline } = state
-    const valid = verifyEd25519(baseline.payload, baseline.signature, baseline.publicKey)
     const out = byId('baseline-out')
+    await guarded(out, ev.currentTarget as HTMLButtonElement, 'Verifying…', async () => {
+    const { baseline } = state!
+    const valid = await client.call<boolean>('verifyEd25519', [baseline.payload, baseline.signature, baseline.publicKey])
     out.replaceChildren(
       verifierView('What the verifier receives (Ed25519 / JWT-style)', [
         el(
@@ -199,7 +210,7 @@ function wireBaseline(): void {
         'Note the two indicators disagree on purpose: the cryptography worked perfectly, and the system still failed the holder.',
       ),
     )
-    done()
+    })
   })
 }
 
@@ -243,30 +254,34 @@ function renderPresentation(pres: Presentation, verified: boolean): HTMLElement[
 function wireSelectiveDisclosure(): void {
   byId<HTMLButtonElement>('sd-run').addEventListener('click', async (ev) => {
     if (!state) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Proving…')
-    await nextFrame()
-    const keys = chosenKeys()
-    const pres = present(state.adult, keys, crypto.getRandomValues(new Uint8Array(16)))
-    lastPresentation = pres
-    const verified = verifyPresentation(state.issuer.pk, pres)
-    byId('sd-out').replaceChildren(...renderPresentation(pres, verified))
-    byId('sd-break').hidden = false
-    done()
+    await guarded(byId('sd-out'), ev.currentTarget as HTMLButtonElement, 'Proving…', async () => {
+      const keys = chosenKeys()
+      const pres = await client.call<Presentation>('present', [
+        state!.adult,
+        keys,
+        crypto.getRandomValues(new Uint8Array(16)),
+      ])
+      lastPresentation = pres
+      const verified = await client.call<boolean>('verifyPresentation', [state!.issuer.pk, pres])
+      byId('sd-out').replaceChildren(...renderPresentation(pres, verified))
+      byId('sd-break').hidden = false
+    })
   })
 
   // step-through of the headline mechanism, one real artifact per step
   let stepIndex = 0
-  let stepData: { pres: Presentation; keys: FieldKey[] } | null = null
+  let stepData: { pres: Presentation; keys: FieldKey[]; verified: boolean } | null = null
   byId<HTMLButtonElement>('sd-step').addEventListener('click', async (ev) => {
     if (!state) return
     const button = ev.currentTarget as HTMLButtonElement
     if (stepIndex === 0) {
-      const done = setBusy(button, 'Preparing…')
-      await nextFrame()
-      const keys = chosenKeys()
-      stepData = { pres: present(state.adult, keys, ascii('step-through')), keys }
-      byId('sd-steps').replaceChildren()
-      done()
+      await guarded(byId('sd-out'), button, 'Preparing…', async () => {
+        const keys = chosenKeys()
+        const pres = await client.call<Presentation>('present', [state!.adult, keys, ascii('step-through')])
+        const verified = await client.call<boolean>('verifyPresentation', [state!.issuer.pk, pres])
+        stepData = { pres, keys, verified }
+        byId('sd-steps').replaceChildren()
+      })
     }
     if (!stepData) return
     const sigHex = bytesToHex(state.adult.signature)
@@ -290,7 +305,7 @@ function wireSelectiveDisclosure(): void {
       {
         label: 'Step 4 — verifier checks a pairing',
         text: 'With only the revealed messages and the issuer public key, the verifier checks e(Ā, W)·e(B̄, −g₂) = 1. It never reconstructs the hidden fields or the signature.',
-        viz: `ProofVerify(pk_issuer, proof, revealed) → ${verifyPresentation(state.issuer.pk, stepData.pres)}`,
+        viz: `ProofVerify(pk_issuer, proof, revealed) → ${stepData.verified}`,
       },
     ]
     const list = byId('sd-steps')
@@ -313,16 +328,15 @@ function wireSelectiveDisclosure(): void {
 
   byId<HTMLButtonElement>('sd-tamper').addEventListener('click', async (ev) => {
     if (!state || !lastPresentation) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Verifying tampered copy…')
-    await nextFrame()
+    await guarded(byId('sd-break-out'), ev.currentTarget as HTMLButtonElement, 'Verifying tampered copy…', async () => {
     const tampered: Presentation = {
-      ...lastPresentation,
-      disclosedFields: { ...lastPresentation.disclosedFields, class: 'A' },
-      disclosedIndexes: lastPresentation.disclosedIndexes.includes(FIELD_KEYS.indexOf('class'))
-        ? lastPresentation.disclosedIndexes
-        : [...lastPresentation.disclosedIndexes, FIELD_KEYS.indexOf('class')].sort((a, b) => a - b),
+      ...lastPresentation!,
+      disclosedFields: { ...lastPresentation!.disclosedFields, class: 'A' },
+      disclosedIndexes: lastPresentation!.disclosedIndexes.includes(FIELD_KEYS.indexOf('class'))
+        ? lastPresentation!.disclosedIndexes
+        : [...lastPresentation!.disclosedIndexes, FIELD_KEYS.indexOf('class')].sort((a, b) => a - b),
     }
-    const verified = verifyPresentation(state.issuer.pk, tampered)
+    const verified = await client.call<boolean>('verifyPresentation', [state!.issuer.pk, tampered])
     byId('sd-break-out').replaceChildren(
       el('div', { class: 'result-pair', role: 'status' }, [
         rawIndicator(`BBS proof verifies against the claim "class: A": ${verified}.`),
@@ -334,23 +348,22 @@ function wireSelectiveDisclosure(): void {
             ),
       ]),
     )
-    done()
+    })
   })
 
   byId<HTMLButtonElement>('sd-honest').addEventListener('click', async (ev) => {
     if (!state || !lastPresentation) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Verifying…')
-    await nextFrame()
-    const verified = verifyPresentation(state.issuer.pk, lastPresentation)
-    byId('sd-break-out').replaceChildren(
-      el('div', { class: 'result-pair', role: 'status' }, [
-        rawIndicator(`BBS proof verifies: ${verified}.`),
-        verified
-          ? verdictIndicator('ok', 'ACCEPT — the untouched presentation still verifies.')
-          : verdictIndicator('alarm', 'REJECT — unexpected: the honest presentation failed.'),
-      ]),
-    )
-    done()
+    await guarded(byId('sd-break-out'), ev.currentTarget as HTMLButtonElement, 'Verifying…', async () => {
+      const verified = await client.call<boolean>('verifyPresentation', [state!.issuer.pk, lastPresentation!])
+      byId('sd-break-out').replaceChildren(
+        el('div', { class: 'result-pair', role: 'status' }, [
+          rawIndicator(`BBS proof verifies: ${verified}.`),
+          verified
+            ? verdictIndicator('ok', 'ACCEPT — the untouched presentation still verifies.')
+            : verdictIndicator('alarm', 'REJECT — unexpected: the honest presentation failed.'),
+        ]),
+      )
+    })
   })
 }
 
@@ -389,12 +402,17 @@ function markCommonBytes(hex: string, others: string[]): { html: string; commonW
 function wireUnlinkability(): void {
   byId<HTMLButtonElement>('unlink-bbs').addEventListener('click', async (ev) => {
     if (!state) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Presenting 3× …')
-    await nextFrame()
-    const presentations = [1, 2, 3].map(() =>
-      present(state!.adult, ['class'], crypto.getRandomValues(new Uint8Array(16))),
-    )
-    const allVerify = presentations.every((p) => verifyPresentation(state!.issuer.pk, p))
+    await guarded(byId('unlink-out'), ev.currentTarget as HTMLButtonElement, 'Presenting 3× …', async () => {
+    const presentations: Presentation[] = []
+    for (let i = 0; i < 3; i++) {
+      presentations.push(
+        await client.call<Presentation>('present', [state!.adult, ['class'], crypto.getRandomValues(new Uint8Array(16))]),
+      )
+    }
+    let allVerify = true
+    for (const p of presentations) {
+      allVerify = (await client.call<boolean>('verifyPresentation', [state!.issuer.pk, p])) && allVerify
+    }
     const hexes = presentations.map((p) => bytesToHex(p.proof))
     let totalCommon = 0
     const blocks = hexes.map((h, i) => {
@@ -418,16 +436,15 @@ function wireUnlinkability(): void {
         'Honest caveat: unlinkable at the cryptographic layer. If the value you reveal identifies you (a name, a license number), no cryptography can unlink that.',
       ),
     )
-    done()
+    })
   })
 
   byId<HTMLButtonElement>('unlink-ed').addEventListener('click', async (ev) => {
     if (!state) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Presenting 3× …')
-    await nextFrame()
-    const { baseline } = state
+    await guarded(byId('unlink-out'), ev.currentTarget as HTMLButtonElement, 'Presenting 3× …', async () => {
+    const { baseline } = state!
     const hex = bytesToHex(baseline.signature)
-    const valid = verifyEd25519(baseline.payload, baseline.signature, baseline.publicKey)
+    const valid = await client.call<boolean>('verifyEd25519', [baseline.payload, baseline.signature, baseline.publicKey])
     const blocks = [1, 2, 3].map((i) =>
       hexBlock(`Presentation ${i} — Ed25519 signature (identical bytes highlighted)`, hex, markCommonBytes(hex, [hex]).html),
     )
@@ -441,7 +458,7 @@ function wireUnlinkability(): void {
         ),
       ]),
     )
-    done()
+    })
   })
 }
 
@@ -451,13 +468,47 @@ function wireUnlinkability(): void {
 
 function wireAge(): void {
   const out = byId('age-out')
+  const cancelBtn = byId<HTMLButtonElement>('age-cancel')
+
+  /** Run an age-proof workload with live progress on the button and a working
+   *  cancel: terminating the worker is the only way to stop pairing math. */
+  async function runAgeOp<T>(button: HTMLButtonElement, busyText: string, work: () => Promise<T>): Promise<T | null> {
+    let result: T | null = null
+    cancelBtn.hidden = false
+    try {
+      await guarded(out, button, busyText, async () => {
+        result = await work()
+      })
+    } finally {
+      cancelBtn.hidden = true
+    }
+    return result
+  }
+
+  const progressTo = (button: HTMLButtonElement, prefix: string) => (stage: string) => {
+    button.textContent = `${prefix} — ${stage}…`
+  }
+
+  cancelBtn.addEventListener('click', () => client.cancel())
 
   byId<HTMLButtonElement>('age-adult').addEventListener('click', async (ev) => {
     if (!state) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Proving (a few seconds of real pairings)…')
-    await nextFrame()
-    const proof = proveAge(state.adult, CUTOFF)
-    const verdict = verifyAge(state.issuer.pk, proof, CUTOFF)
+    const button = ev.currentTarget as HTMLButtonElement
+    const result = await runAgeOp(button, 'Proving (real pairings, off the main thread)…', async () => {
+      const proof = await client.call<AgeProof>(
+        'proveAge',
+        [state!.adult, CUTOFF, {}],
+        progressTo(button, 'Proving'),
+      )
+      const verdict = await client.call<AgeVerdict>(
+        'verifyAge',
+        [state!.issuer.pk, proof, CUTOFF],
+        progressTo(button, 'Verifying'),
+      )
+      return { proof, verdict }
+    })
+    if (!result) return
+    const { proof, verdict } = result
     out.replaceChildren(
       verifierView('What the verifier receives', [
         el('p', {}, [
@@ -477,19 +528,22 @@ function wireAge(): void {
           : verdictIndicator('alarm', 'REJECT — ' + verdict.reason),
       ]),
     )
-    done()
   })
 
   byId<HTMLButtonElement>('age-minor').addEventListener('click', async (ev) => {
     if (!state) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Attempting…')
-    await nextFrame()
-    let threw = false
-    try {
-      proveAge(state.minor, CUTOFF)
-    } catch (err) {
-      threw = err instanceof RangeError
-    }
+    const button = ev.currentTarget as HTMLButtonElement
+    const result = await runAgeOp(button, 'Attempting…', async () => {
+      try {
+        await client.call<AgeProof>('proveAge', [state!.minor, CUTOFF, {}], progressTo(button, 'Attempting'))
+        return { threw: false }
+      } catch (err) {
+        if (err instanceof CancelledError) throw err
+        return { threw: err instanceof RangeError }
+      }
+    })
+    if (!result) return
+    const { threw } = result
     out.replaceChildren(
       el('div', { class: 'result-pair', role: 'status' }, [
         rawIndicator(
@@ -505,15 +559,26 @@ function wireAge(): void {
           : verdictIndicator('alarm', 'The prover should have refused.'),
       ]),
     )
-    done()
   })
 
   byId<HTMLButtonElement>('age-forge').addEventListener('click', async (ev) => {
     if (!state) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Forging + verifying (a few seconds)…')
-    await nextFrame()
-    const forged = proveAge(state.minor, CUTOFF, { forge: true })
-    const verdict = verifyAge(state.issuer.pk, forged, CUTOFF)
+    const button = ev.currentTarget as HTMLButtonElement
+    const result = await runAgeOp(button, 'Forging + verifying (off the main thread)…', async () => {
+      const forged = await client.call<AgeProof>(
+        'proveAge',
+        [state!.minor, CUTOFF, { forge: true }],
+        progressTo(button, 'Forging'),
+      )
+      const verdict = await client.call<AgeVerdict>(
+        'verifyAge',
+        [state!.issuer.pk, forged, CUTOFF],
+        progressTo(button, 'Verifying'),
+      )
+      return verdict
+    })
+    if (!result) return
+    const verdict = result
     out.replaceChildren(
       verifierView('The forgery attempt', [
         el('p', {}, [
@@ -535,7 +600,6 @@ function wireAge(): void {
         'The two raw results disagreeing — signature genuine, transcript impossible — is exactly what verdict separation is for.',
       ),
     )
-    done()
   })
 }
 
@@ -587,11 +651,12 @@ function wireRevocation(): void {
 
   byId<HTMLButtonElement>('revoke-check').addEventListener('click', async (ev) => {
     if (!state) return
-    const done = setBusy(ev.currentTarget as HTMLButtonElement, 'Presenting + checking…')
-    await nextFrame()
-    const pres = lastPresentation ?? present(state.adult, ['class'], ascii('revocation-check'))
+    await guarded(out, ev.currentTarget as HTMLButtonElement, 'Presenting + checking…', async () => {
+    const pres =
+      lastPresentation ??
+      (await client.call<Presentation>('present', [state!.adult, ['class'], ascii('revocation-check')]))
     lastPresentation = pres
-    const proofOk = verifyPresentation(state.issuer.pk, pres)
+    const proofOk = await client.call<boolean>('verifyPresentation', [state!.issuer.pk, pres])
     const revoked = list.isRevoked(CRED_INDEX)
     out.replaceChildren(
       renderBits(true),
@@ -608,7 +673,7 @@ function wireRevocation(): void {
             ),
       ]),
     )
-    done()
+    })
   })
 }
 

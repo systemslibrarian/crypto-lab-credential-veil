@@ -54,9 +54,10 @@ One deliberate encoding deviation, for honesty: five credential fields are mappe
 ```bash
 npm ci
 npm run dev        # local dev server
-npm test           # unit tests incl. official spec KATs
+npm test           # unit tests incl. official spec KATs + adversarial suite
 npm run build      # typecheck + production build
-npm run test:a11y  # axe-core WCAG 2.1 A/AA gate, both themes (uses port 4351)
+npm run test:a11y  # axe WCAG 2.1 A/AA gate — Chromium/Firefox/WebKit/mobile, both themes (port 4351)
+npm run bench      # reproducible performance numbers (see docs/benchmarks.md)
 ```
 
 ## Related Demos
@@ -68,13 +69,35 @@ npm run test:a11y  # axe-core WCAG 2.1 A/AA gate, both themes (uses port 4351)
 
 ## Build & Verify
 
-- **66 unit tests** (Vitest), colocated in `src/`, all executed in CI before deploy.
+- **79 unit tests** (Vitest), colocated in `src/`, all executed in CI before deploy —
+  including a property-based/adversarial suite (`src/credential/adversarial.test.ts`)
+  that byte-flips, truncates, and re-targets valid proofs and requires every mutation to
+  fail closed.
 - **25 official spec KATs** from the draft-irtf-cfrg-bbs-signatures fixtures (BLS12-381-SHA-256): 10 signature, 15 proof — plus keypair, hash-to-scalar, 10 message-to-scalar cases, the full generator set (P1, Q1, H1–H10), and the mocked-RNG vectors, in `src/bbs/fixtures/`.
 - **Accessibility gate:** `@axe-core/playwright` scans the production build in **both themes** after driving every exhibit to its post-interaction state; zero WCAG 2.1 A/AA violations required for deploy (`.github/workflows/deploy.yml`).
+- **Browser matrix:** the a11y/interaction drive runs on Chromium, Firefox, WebKit, and
+  a mobile (Pixel-7-sized) viewport — four projects, both themes, serialized because
+  parallel pairing math can starve a browser renderer.
+
+## Reviewing the cryptography
+
+Start with [docs/design-note.md](docs/design-note.md) — it states exactly what each
+proof proves, separates standard BBS from this lab's extensions (the DOB scalar
+encoding and the challenge-linked age predicate), and lists the known limitations.
+Companions: [docs/threat-model.md](docs/threat-model.md) (who is protected from whom,
+and what is out of scope) and [docs/spec-provenance.md](docs/spec-provenance.md) (which
+draft text, which fixtures, which library versions). Security reports: see
+[SECURITY.md](SECURITY.md). License: [MIT](LICENSE).
 
 ## Performance
 
-Everything runs on the main thread with `@noble/curves` (pure JS, no WASM). A selective-disclosure proof takes well under a second; the age-predicate proof does ~50 extra group operations plus a pairing and takes a few seconds — the buttons say so while they work. Nothing is precomputed or faked to hide that cost.
+All proof work runs in a **Web Worker** with `@noble/curves` (pure JS, no WASM), so the
+page never freezes; the age-proof buttons stream coarse progress ("committing 15 bits…",
+"checking the pairing…") and a cancel button hard-stops the worker mid-proof. A
+selective-disclosure proof takes ~100 ms; prove-plus-verify for the age predicate is
+~1.5 s of real group operations and a pairing. Reproducible numbers, proof sizes, and
+methodology: [docs/benchmarks.md](docs/benchmarks.md) (`npm run bench`). Nothing is
+precomputed or faked to hide the cost.
 
 ---
 
