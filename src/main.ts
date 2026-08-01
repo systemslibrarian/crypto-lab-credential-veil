@@ -222,6 +222,46 @@ function chosenKeys(): FieldKey[] {
   return FIELD_KEYS.filter((k) => byId<HTMLInputElement>(`sd-field-${k}`).checked)
 }
 
+/**
+ * The lie the tamper button tells, per field. Each is a well-formed value of
+ * the right shape (a real ISO date for DOB, so the failure is the signature
+ * binding and not a parse error).
+ */
+const TAMPERED_VALUES: Record<FieldKey, string> = {
+  name: 'Jordan Vale',
+  dob: '1970-01-01',
+  address: '99 Oak Ave, Shelbyville',
+  license: 'X9999-0000',
+  class: 'A',
+  expiry: '2099-12-31',
+}
+
+/**
+ * The tamper exhibit may only lie about a value the holder ACTUALLY revealed —
+ * appending an extra index to `disclosedIndexes` would be rejected too, but as
+ * a malformed presentation (proof/generator length mismatch), which is not the
+ * lesson this exhibit claims to teach. Returns the first revealed field, or
+ * null when nothing was revealed.
+ */
+function tamperTarget(pres: Presentation): FieldKey | null {
+  const i = pres.disclosedIndexes[0]
+  return i === undefined ? null : FIELD_KEYS[i]
+}
+
+/** Keep the tamper button's promise matched to the presentation on screen. */
+function noteLastPresentation(pres: Presentation): void {
+  lastPresentation = pres
+  const button = byId<HTMLButtonElement>('sd-tamper')
+  const key = tamperTarget(pres)
+  if (key === null) {
+    button.disabled = true
+    button.textContent = 'Nothing revealed — no disclosed value to lie about'
+  } else {
+    button.disabled = false
+    button.textContent = `Tamper: claim ${FIELD_LABELS[key].toLowerCase()} "${TAMPERED_VALUES[key]}" instead`
+  }
+}
+
 function renderPresentation(pres: Presentation, verified: boolean): HTMLElement[] {
   const revealed = Object.entries(pres.disclosedFields)
   const hiddenCount = FIELD_KEYS.length - revealed.length
@@ -261,7 +301,7 @@ function wireSelectiveDisclosure(): void {
         keys,
         crypto.getRandomValues(new Uint8Array(16)),
       ])
-      lastPresentation = pres
+      noteLastPresentation(pres)
       const verified = await client.call<boolean>('verifyPresentation', [state!.issuer.pk, pres])
       byId('sd-out').replaceChildren(...renderPresentation(pres, verified))
       byId('sd-break').hidden = false
@@ -328,23 +368,34 @@ function wireSelectiveDisclosure(): void {
 
   byId<HTMLButtonElement>('sd-tamper').addEventListener('click', async (ev) => {
     if (!state || !lastPresentation) return
+    const key = tamperTarget(lastPresentation)
+    if (key === null) {
+      byId('sd-break-out').replaceChildren(
+        statusLine(
+          'This presentation revealed nothing, so there is no disclosed value to lie about. ' +
+            'Check a field, generate a new presentation, and try again.',
+        ),
+      )
+      return
+    }
     await guarded(byId('sd-break-out'), ev.currentTarget as HTMLButtonElement, 'Verifying tampered copy…', async () => {
+    // Only the VALUE changes; the disclosed index set is untouched, so the
+    // verifier rejects because the proof binds that byte — not because the
+    // presentation is the wrong shape.
+    const lie = TAMPERED_VALUES[key]
     const tampered: Presentation = {
       ...lastPresentation!,
-      disclosedFields: { ...lastPresentation!.disclosedFields, class: 'A' },
-      disclosedIndexes: lastPresentation!.disclosedIndexes.includes(FIELD_KEYS.indexOf('class'))
-        ? lastPresentation!.disclosedIndexes
-        : [...lastPresentation!.disclosedIndexes, FIELD_KEYS.indexOf('class')].sort((a, b) => a - b),
+      disclosedFields: { ...lastPresentation!.disclosedFields, [key]: lie },
     }
     const verified = await client.call<boolean>('verifyPresentation', [state!.issuer.pk, tampered])
     byId('sd-break-out').replaceChildren(
       el('div', { class: 'result-pair', role: 'status' }, [
-        rawIndicator(`BBS proof verifies against the claim "class: A": ${verified}.`),
+        rawIndicator(`BBS proof verifies against the claim "${FIELD_LABELS[key]}: ${lie}": ${verified}.`),
         verified
           ? verdictIndicator('alarm', 'FORGERY ACCEPTED — this must never happen; the primitive would be broken.')
           : verdictIndicator(
               'ok',
-              'REJECT — you lied about a disclosed value and the real verifier caught it. The proof binds every revealed byte to the issuer’s one signature.',
+              `REJECT — you changed a revealed value (${FIELD_LABELS[key].toLowerCase()}) after proving, and the real verifier caught it. The proof binds every revealed byte to the issuer’s one signature.`,
             ),
       ]),
     )
@@ -655,7 +706,7 @@ function wireRevocation(): void {
     const pres =
       lastPresentation ??
       (await client.call<Presentation>('present', [state!.adult, ['class'], ascii('revocation-check')]))
-    lastPresentation = pres
+    noteLastPresentation(pres)
     const proofOk = await client.call<boolean>('verifyPresentation', [state!.issuer.pk, pres])
     const revoked = list.isRevoked(CRED_INDEX)
     out.replaceChildren(
