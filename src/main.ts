@@ -464,6 +464,18 @@ function wireUnlinkability(): void {
     for (const p of presentations) {
       allVerify = (await client.call<boolean>('verifyPresentation', [state!.issuer.pk, p])) && allVerify
     }
+    // A presentation is more than its proof octets: it also carries the values
+    // the holder chose to disclose. markCommonBytes scans the proof only, so a
+    // verdict built from it alone would call three showings "sharing nothing"
+    // while all three hand the verifier the same Class value. Compute the
+    // disclosed-value overlap too, and say what it is.
+    const sharedDisclosed = FIELD_KEYS.filter((k) => {
+      const first = presentations[0].disclosedFields[k]
+      return first !== undefined && presentations.every((p) => p.disclosedFields[k] === first)
+    })
+    const sharedDisclosedText = sharedDisclosed
+      .map((k) => `${FIELD_LABELS[k]} = ${presentations[0].disclosedFields[k]}`)
+      .join(', ')
     const hexes = presentations.map((p) => bytesToHex(p.proof))
     let totalCommon = 0
     const blocks = hexes.map((h, i) => {
@@ -475,16 +487,27 @@ function wireUnlinkability(): void {
     byId('unlink-out').replaceChildren(
       el('div', { class: 'present-grid' }, blocks),
       el('div', { class: 'result-pair', role: 'status' }, [
-        rawIndicator(`All 3 proofs verify: ${allVerify}. Shared 8-byte runs found across all three: ${totalCommon}.`),
-        totalCommon === 0 && allVerify
-          ? verdictIndicator(
-              'ok',
-              'UNLINKABLE — three valid showings of ONE credential, with no common value for a verifier (or two colluding verifiers) to correlate.',
-            )
-          : verdictIndicator('alarm', 'Correlatable bytes found — this must not happen with fresh randomness.'),
+        rawIndicator(
+          `All 3 proofs verify: ${allVerify}. Shared 8-byte runs across all three proofs: ${totalCommon}. `
+            + `Disclosed values identical across all three: ${sharedDisclosed.length}`
+            + (sharedDisclosed.length ? ` (${sharedDisclosedText}).` : '.'),
+        ),
+        totalCommon !== 0 || !allVerify
+          ? verdictIndicator('alarm', 'Correlatable proof bytes found — this must not happen with fresh randomness.')
+          : sharedDisclosed.length === 0
+            ? verdictIndicator(
+                'ok',
+                'UNLINKABLE — three valid showings of ONE credential, and nothing in any of them is common to the other two.',
+              )
+            : verdictIndicator(
+                'warn',
+                `PROOFS UNLINKABLE, DISCLOSURE IS NOT — the proof octets share nothing, but every showing hands the verifier ${sharedDisclosedText}. `
+                  + 'That value is the correlator, and it is there because you chose to reveal it, not because the cryptography leaked it. '
+                  + 'Two colluding verifiers can link these three showings exactly as well as the revealed value distinguishes you.',
+              ),
       ]),
       statusLine(
-        'Honest caveat: unlinkable at the cryptographic layer. If the value you reveal identifies you (a name, a license number), no cryptography can unlink that.',
+        'Honest caveat: BBS unlinks the cryptographic layer only. If the value you reveal identifies you (a name, a license number), no cryptography can unlink that — the line above computes exactly which values were common to all three.',
       ),
     )
     })
@@ -494,19 +517,50 @@ function wireUnlinkability(): void {
     if (!state) return
     await guarded(byId('unlink-out'), ev.currentTarget as HTMLButtonElement, 'Presenting 3× …', async () => {
     const { baseline } = state!
-    const hex = bytesToHex(baseline.signature)
-    const valid = await client.call<boolean>('verifyEd25519', [baseline.payload, baseline.signature, baseline.publicKey])
-    const blocks = [1, 2, 3].map((i) =>
-      hexBlock(`Presentation ${i} — Ed25519 signature (identical bytes highlighted)`, hex, markCommonBytes(hex, [hex]).html),
-    )
+    // Three separate showings. With Ed25519 a "presentation" is a copy of the
+    // one signature the issuer made — there is nothing to re-randomize — so we
+    // build three of them, verify EACH one independently, and then measure
+    // whether their bytes coincide instead of asserting that they do.
+    const showings = [1, 2, 3].map(() => ({
+      signature: Uint8Array.from(baseline.signature),
+      payload: Uint8Array.from(baseline.payload),
+    }))
+    let verifiedCount = 0
+    for (const s of showings) {
+      if (await client.call<boolean>('verifyEd25519', [s.payload, s.signature, baseline.publicKey])) {
+        verifiedCount += 1
+      }
+    }
+    const hexes = showings.map((s) => bytesToHex(s.signature))
+    let sharedRuns = 0
+    const blocks = hexes.map((h, i) => {
+      const others = hexes.filter((_, j) => j !== i)
+      const { html, commonWindows } = markCommonBytes(h, others)
+      sharedRuns += commonWindows
+      return hexBlock(`Presentation ${i + 1} — Ed25519 signature (runs shared with the other two highlighted)`, h, html)
+    })
+    const identical = hexes.every((h) => h === hexes[0])
+    let agreeing = 0
+    for (let i = 0; i < hexes[0].length; i++) {
+      if (hexes.every((h) => h[i] === hexes[0][i])) agreeing += 1
+    }
+    const overlapPct = Math.round((agreeing / hexes[0].length) * 100)
     byId('unlink-out').replaceChildren(
       el('div', { class: 'present-grid' }, blocks),
       el('div', { class: 'result-pair', role: 'status' }, [
-        rawIndicator(`All 3 presentations verify: ${valid}. The signature bytes are 100% identical each time.`),
-        verdictIndicator(
-          'alarm',
-          'LINKABLE — the same 64 bytes at the bar on Friday, the pharmacy on Monday, and the bank on Tuesday. A valid signature that doubles as a perfect tracking cookie.',
+        rawIndicator(
+          `${verifiedCount} of ${showings.length} presentations verify. Shared 8-byte runs across all three: ${sharedRuns}. `
+            + `Byte-for-byte identical across all three: ${identical} (${overlapPct}% of the signature).`,
         ),
+        identical
+          ? verdictIndicator(
+              'alarm',
+              `LINKABLE — the same ${showings[0].signature.length} bytes at the bar on Friday, the pharmacy on Monday, and the bank on Tuesday. A valid signature that doubles as a perfect tracking cookie.`,
+            )
+          : verdictIndicator(
+              'warn',
+              'The three showings differ — unexpected for a plain Ed25519 credential, which has no re-randomization to apply.',
+            ),
       ]),
     )
     })
@@ -658,6 +712,17 @@ function wireAge(): void {
 // exhibit 5 — revocation
 // ---------------------------------------------------------------------------
 
+/**
+ * The presentation header the wallet commits to when a verifier will do a
+ * status-list check. Binding the index in is what turns "you must reveal your
+ * index" from prose into an enforced property: verifyPresentation rebuilds this
+ * header from the index the verifier was told, so a wrong or withheld index
+ * simply fails.
+ */
+function statusBoundHeader(index: number): Uint8Array {
+  return ascii(`revocation-check|status-index:${index}`)
+}
+
 function wireRevocation(): void {
   const list = new StatusList(64)
   const CRED_INDEX = 17
@@ -703,24 +768,55 @@ function wireRevocation(): void {
   byId<HTMLButtonElement>('revoke-check').addEventListener('click', async (ev) => {
     if (!state) return
     await guarded(out, ev.currentTarget as HTMLButtonElement, 'Presenting + checking…', async () => {
-    const pres =
-      lastPresentation ??
-      (await client.call<Presentation>('present', [state!.adult, ['class'], ascii('revocation-check')]))
+    // The wallet binds the status index into the presentation header, then
+    // sends it in the clear alongside the proof. The verifier below reads the
+    // index off the wire — it is the only place the number comes from — and
+    // rebuilds the header from it. That makes "the wallet had to reveal the
+    // index" a property this code enforces rather than a sentence about it:
+    // a presentation whose header commits to index i verifies only against a
+    // claimed index of i, so the wallet cannot withhold or swap the number.
+    const pres = await client.call<Presentation>('present', [
+      state!.adult,
+      ['class'],
+      statusBoundHeader(CRED_INDEX),
+    ])
     noteLastPresentation(pres)
-    const proofOk = await client.call<boolean>('verifyPresentation', [state!.issuer.pk, pres])
-    const revoked = list.isRevoked(CRED_INDEX)
+
+    // Everything the wallet puts on the wire, and nothing else.
+    const wire = { proof: pres.proof, disclosedFields: pres.disclosedFields, statusIndex: CRED_INDEX }
+
+    // Verifier side: rebuild the header from the CLAIMED index and verify.
+    const asVerifier = (claimedIndex: number) =>
+      client.call<boolean>('verifyPresentation', [
+        state!.issuer.pk,
+        { ...pres, presentationHeader: statusBoundHeader(claimedIndex) },
+      ])
+    const proofOk = await asVerifier(wire.statusIndex)
+    // Control: the same proof presented with a decoy index. If this verified,
+    // the index would not be bound and the privacy cost below would be a story.
+    const decoyIndex = (wire.statusIndex + 1) % list.size
+    const decoyOk = await asVerifier(decoyIndex)
+
+    const revoked = list.isRevoked(wire.statusIndex)
     out.replaceChildren(
       renderBits(true),
       el('div', { class: 'result-pair', role: 'status' }, [
-        rawIndicator(`BBS proof verifies: ${proofOk} — the cryptography is satisfied either way.`),
+        rawIndicator(
+          `Wallet sent: proof + disclosed ${JSON.stringify(wire.disclosedFields)} + status index ${wire.statusIndex}. `
+            + `Verified against the claimed index ${wire.statusIndex}: ${proofOk} — the cryptography is satisfied either way. `
+            + `Same proof re-checked against decoy index ${decoyIndex}: ${decoyOk}. `
+            + `Status bit #${wire.statusIndex} in the published list: ${revoked ? '1' : '0'}.`,
+        ),
         revoked
           ? verdictIndicator(
               'alarm',
-              `REJECT — proof valid, credential revoked. And to check bit #${CRED_INDEX}, the wallet had to reveal the index — a stable identifier shown at every presentation.`,
+              `REJECT — proof valid, credential revoked. The verdict came from bit #${wire.statusIndex}, and the verifier learned that number `
+                + `because the wallet sent it: the header is bound to it, so a decoy index fails to verify (${decoyOk}). A stable identifier, shown at every presentation.`,
             )
           : verdictIndicator(
               'warn',
-              `ACCEPT, at a price — bit #${CRED_INDEX} is 0, but the verifier now holds your stable index. Every unlinkable proof you make is re-linkable through it.`,
+              `ACCEPT, at a price — bit #${wire.statusIndex} is 0, but the verifier now holds your stable index, and it could not have checked without it `
+                + `(the decoy index verifies: ${decoyOk}). Every unlinkable proof you make is re-linkable through it.`,
             ),
       ]),
     )

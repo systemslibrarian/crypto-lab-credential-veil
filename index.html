@@ -199,8 +199,9 @@
           to prove one field, you hand over the whole document and the signature that binds it. BBS signatures break
           that. The issuer signs the six fields <em>once</em>; the holder can then prove, as many times as they like,
           that a valid signature exists over any subset of fields they choose to reveal — without ever showing the
-          signature itself. And because each presentation is freshly randomized, two showings of the same credential
-          share nothing a verifier could correlate.
+          signature itself. And because each presentation is freshly randomized, the <em>proof octets</em> of two showings of
+          the same credential share nothing a verifier could correlate. The values you choose to reveal are a different
+          matter — Exhibit 3 measures both and tells you which ones came out common.
         </p>
         <p class="scope-note">
           <strong>Honest scope:</strong> this is a teaching demo, not production crypto. The BBS signatures, proofs,
