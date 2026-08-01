@@ -1,10 +1,12 @@
 # Credential Veil — crypto-lab
 
-Anonymous credentials with **BBS+ selective disclosure** over BLS12-381, in the browser. Prove you're over 18 from a signed credential containing your birth date — without showing the birth date, without showing the signature, and without the verifier being able to link this presentation to the last one.
+Anonymous credentials with **BBS selective disclosure** over BLS12-381, in the browser. Prove you're over 18 from a signed credential containing your birth date — without showing the birth date, without showing the signature, and without the verifier being able to link this presentation to the last one.
 
 ## What It Is
 
 A signed credential (a JWT, a mobile driver's license) is an **all-or-nothing artifact**: to prove one field, you hand over the whole document plus the signature that binds it — and that signature is a stable byte string that links every place you show it. BBS signatures (Boneh–Boyen–Shacham lineage, modernized by Camenisch–Drijvers–Lehmann, standardized in **draft-irtf-cfrg-bbs-signatures**) break that: the issuer signs N messages once; the holder proves knowledge of that signature while revealing only the k messages they choose, in a freshly randomized presentation each time.
+
+**On the name:** this lab implements the CFRG draft's scheme, which the draft calls plain **BBS** — its signature is the pair `(A, e)`. **BBS+** is a distinct scheme: the Au–Susilo–Mu variant (*Constant-Size Dynamic k-TAA*, SCN 2006), whose signature carries an extra blinding scalar, `(A, e, s)`. The two are often conflated; this repo means the former throughout.
 
 **What's real:** the BBS implementation on this page is hand-rolled to the draft's pseudocode (ciphersuite **BLS12-381-SHA-256**) on top of `@noble/curves` for the BLS12-381 pairing arithmetic, and passes the official fixture KATs — signing, verification, proof generation and proof verification. The Ed25519 baseline, the Pedersen-commitment age range proof, and the status-list bitstring are also real and run live.
 
@@ -21,7 +23,7 @@ One deliberate encoding deviation, for honesty: five credential fields are mappe
 3. **Unlinkability** — present the same credential three times; the page diffs the proof bytes (any 8-byte run shared by all three would be highlighted — there are none). Flip to Ed25519: the identical signature, three times. You do the diff.
 4. **Age ≥ 18 predicate** — a bit-decomposition range proof over a Pedersen commitment, challenge-linked into the BBS proof so the committed value *is* the signed DOB. The verifier learns one bit. Try it honestly with a 2010 birth date (no proof exists), then force a forgery and watch the real verifier separate "genuine signature" from "impossible transcript".
 5. **Revocation, the honest tension** — a real status-list bitstring. Revoke bit #17, check it as the verifier, and read the price: the index is a stable correlation handle that undoes the unlinkability you just saw. Stated, not solved.
-6. **What hides what, from whom** — BBS+ vs blind signatures (signer-blind at issuance, still all-or-nothing at showing) vs ring signatures (hides *who*, not *what*) vs plain JWT/mDL.
+6. **What hides what, from whom** — BBS vs blind signatures (signer-blind at issuance, still all-or-nothing at showing) vs ring signatures (hides *who*, not *what*) vs plain JWT/mDL.
 
 ## When to Use It
 

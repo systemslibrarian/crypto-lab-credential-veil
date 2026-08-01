@@ -2,7 +2,7 @@
 
 ## What this project is
 
-Credential Veil is a **teaching demo** of BBS+ selective disclosure. It is explicitly
+Credential Veil is a **teaching demo** of BBS selective disclosure. It is explicitly
 not production cryptography: no constant-time discipline, no side-channel review, no
 key management, no audit. Do not build a wallet, issuer, or verifier on this code. The
 known, accepted limitations are documented in

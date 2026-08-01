@@ -12,20 +12,20 @@
     <title>Credential Veil — crypto-lab</title>
     <meta
       name="description"
-      content="Interactive demo of BBS+ anonymous credentials over BLS12-381: multi-message signing, selective disclosure, unlinkable presentations, and an age-over-18 predicate proof."
+      content="Interactive demo of BBS anonymous credentials over BLS12-381: multi-message signing, selective disclosure, unlinkable presentations, and an age-over-18 predicate proof."
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Credential Veil — crypto-lab" />
     <meta
       property="og:description"
-      content="Interactive demo of BBS+ anonymous credentials over BLS12-381: multi-message signing, selective disclosure, unlinkable presentations, and an age-over-18 predicate proof."
+      content="Interactive demo of BBS anonymous credentials over BLS12-381: multi-message signing, selective disclosure, unlinkable presentations, and an age-over-18 predicate proof."
     />
     <meta property="og:url" content="https://systemslibrarian.github.io/crypto-lab-credential-veil/" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Credential Veil — crypto-lab" />
     <meta
       name="twitter:description"
-      content="Interactive demo of BBS+ anonymous credentials over BLS12-381: multi-message signing, selective disclosure, unlinkable presentations, and an age-over-18 predicate proof."
+      content="Interactive demo of BBS anonymous credentials over BLS12-381: multi-message signing, selective disclosure, unlinkable presentations, and an age-over-18 predicate proof."
     />
     <link
       rel="icon"
@@ -155,7 +155,7 @@
       <header class="cl-hero">
         <div class="cl-hero-main">
           <h1 class="cl-hero-title">Credential Veil</h1>
-          <p class="cl-hero-sub">Anonymous credentials · BBS+ selective disclosure</p>
+          <p class="cl-hero-sub">Anonymous credentials · BBS selective disclosure</p>
           <p class="cl-hero-desc">
             Signs one six-field credential with BBS over BLS12-381, then lets you reveal any subset of fields — or
             just prove you're over 18 — while the verifier checks a proof that never contains the signature or the
@@ -166,7 +166,7 @@
           <span class="cl-hero-why-label">WHY IT MATTERS</span>
           <p class="cl-hero-why-text">
             Every time you show an ID to prove one thing, you leak everything on it — and the signature itself is a
-            perfect tracking beacon that links your visits together. BBS+ lets an issuer sign once while the holder
+            perfect tracking beacon that links your visits together. BBS lets an issuer sign once while the holder
             proves exactly what's needed, differently every time.
           </p>
         </aside>
@@ -178,7 +178,7 @@
         <h2 id="intro-h">What is this?</h2>
         <p>
           A signed credential — a driver's license, a JWT, a mobile ID — is an <strong>all-or-nothing artifact</strong>:
-          to prove one field, you hand over the whole document and the signature that binds it. BBS+ signatures break
+          to prove one field, you hand over the whole document and the signature that binds it. BBS signatures break
           that. The issuer signs the six fields <em>once</em>; the holder can then prove, as many times as they like,
           that a valid signature exists over any subset of fields they choose to reveal — without ever showing the
           signature itself. And because each presentation is freshly randomized, two showings of the same credential
@@ -342,6 +342,13 @@
 
       <section class="panel" aria-labelledby="compare-h">
         <h2 id="compare-h">What hides what, from whom</h2>
+        <p class="scope-note">
+          <strong>On the name:</strong> this lab implements the scheme in
+          draft-irtf-cfrg-bbs-signatures, which the draft calls plain <strong>BBS</strong> — its signature is the
+          pair <code>(A, e)</code>. <strong>BBS+</strong> is a distinct scheme: the Au–Susilo–Mu variant
+          (<em>Constant-Size Dynamic k-TAA</em>, SCN 2006), whose signature carries an extra blinding scalar,
+          <code>(A, e, s)</code>. The two are often conflated; this page means the former throughout.
+        </p>
         <div class="table-wrap" role="region" aria-label="Comparison of credential schemes" tabindex="0">
           <table>
             <caption class="visually-hidden">
@@ -365,7 +372,7 @@
                 <td>No</td>
               </tr>
               <tr>
-                <th scope="row">BBS+ (this lab)</th>
+                <th scope="row">BBS (this lab)</th>
                 <td>All fields</td>
                 <td>Chosen fields + a fresh proof</td>
                 <td>No, at the crypto layer</td>
@@ -411,7 +418,7 @@
               <a href="https://systemslibrarian.github.io/crypto-lab-bulletproofs/">bulletproofs</a>.
             </li>
             <li>
-              No Idemix / CL-signature build-out — BBS+ descends from Boneh–Boyen–Shacham group signatures via
+              No Idemix / CL-signature build-out — BBS descends from Boneh–Boyen–Shacham group signatures via
               Camenisch–Drijvers–Lehmann; the RSA-based CL lineage solved the same problem a decade earlier.
             </li>
             <li>
