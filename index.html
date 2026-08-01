@@ -35,11 +35,6 @@
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
-<!-- BEGIN crypto-lab shared header — managed; edit shared-header.html + re-run reapply-header.py
-     Identical on every lab. Self-contained styles. Accents use each demo's own
-     --accent CSS variable (teal #35d6bb fallback). The ONLY per-repo value is the
-     repo name (crypto-lab-credential-veil) in the GitHub link.
-     Source of truth: github.com/systemslibrarian/crypto-lab/shared-header.html -->
 <style>
   .cl-topbar{
     /* The bar is always dark (#0b1512) regardless of page theme, so header
@@ -98,6 +93,11 @@
     .cl-btn span{display:none}
     .cl-btn svg{margin:0}
   }
+  /* The only transitions on this page are the two above; honour a reduced-motion
+     preference (WCAG 2.3.3). Kept in this stylesheet so source order wins. */
+  @media (prefers-reduced-motion: reduce){
+    .cl-btn,.cl-skip-link{transition:none}
+  }
 </style>
 <a class="cl-skip-link" href="#app">Skip to content</a>
 <header class="cl-topbar" role="banner" aria-label="Crypto Lab">
@@ -151,7 +151,6 @@
     else dedupeBanner();
   })();
 </script>
-<!-- END crypto-lab shared header -->
     <div id="app">
       <header class="cl-hero">
         <div class="cl-hero-main">
@@ -172,6 +171,8 @@
           </p>
         </aside>
       </header>
+
+      <main>
 
       <section class="panel intro-panel" aria-labelledby="intro-h">
         <h2 id="intro-h">What is this?</h2>
@@ -420,6 +421,8 @@
           </ul>
         </details>
       </section>
+
+      </main>
 
       <footer class="scripture-footer">
         <p>
