@@ -93,6 +93,11 @@
     .cl-btn span{display:none}
     .cl-btn svg{margin:0}
   }
+  /* cl-a11y-touch: WCAG 2.5.5 target size on touch pointers only, so the
+     bar keeps its density on desktop where a mouse is precise. */
+  @media (pointer: coarse){
+    .cl-btn,.cl-icon{min-height:44px;min-width:44px}
+  }
   /* The only transitions on this page are the two above; honour a reduced-motion
      preference (WCAG 2.3.3). Kept in this stylesheet so source order wins. */
   @media (prefers-reduced-motion: reduce){
@@ -143,8 +148,12 @@
       document.querySelectorAll('[role="banner"]').forEach(function (el) {
         if (el !== bar) el.setAttribute('role', 'group');
       });
-      Array.prototype.forEach.call(document.body ? document.body.children : [], function (el) {
-        if (el.tagName === 'HEADER' && el !== bar && !el.hasAttribute('role')) el.setAttribute('role', 'group');
+      Array.prototype.forEach.call(document.querySelectorAll('header'), function (el) {
+        if (el === bar || el.hasAttribute('role')) return;
+        // <header> only implies banner when it is NOT scoped inside sectioning content.
+        // Checking closest() catches heroes nested in #app, which body.children missed.
+        if (el.closest('main, article, aside, nav, section')) return;
+        el.setAttribute('role', 'group');
       });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dedupeBanner);
