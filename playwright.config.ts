@@ -18,7 +18,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:4351/crypto-lab-credential-veil/',
+    baseURL: 'http://localhost:4620/crypto-lab-credential-veil/',
     // Pin the emulated color scheme to dark so the default scan is dark and
     // the shared-header toggle deterministically moves to light.
     colorScheme: 'dark',
@@ -36,8 +36,8 @@ export default defineConfig({
     // Without the build, a source change that fails to compile leaves the last
     // good bundle in place and the suite passes green against code that no
     // longer builds — which silently invalidates mutation checks.
-    command: 'npm run build && npm run preview -- --port 4351 --strictPort',
-    url: 'http://localhost:4351/crypto-lab-credential-veil/',
+    command: 'npm run build && npm run preview -- --port 4620 --strictPort',
+    url: 'http://localhost:4620/crypto-lab-credential-veil/',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

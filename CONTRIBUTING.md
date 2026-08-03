@@ -20,7 +20,7 @@ Thanks for looking under the hood. This repo is one demo in the
 npm ci
 npm test           # unit tests + official spec KATs — must be 100% green
 npm run build      # tsc --noEmit gates the build
-npm run test:a11y  # axe WCAG 2.1 A/AA gate (build first; uses port 4351)
+npm run test:a11y  # axe WCAG 2.1 A/AA gate (build first; uses port 4620)
 ```
 
 All three are CI gates; a PR that fails any of them will not deploy.

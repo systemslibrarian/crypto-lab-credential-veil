@@ -58,7 +58,7 @@ npm ci
 npm run dev        # local dev server
 npm test           # unit tests incl. official spec KATs + adversarial suite
 npm run build      # typecheck + production build
-npm run test:a11y  # axe WCAG 2.1 A/AA gate — Chromium/Firefox/WebKit/mobile, both themes (port 4351)
+npm run test:a11y  # axe WCAG 2.1 A/AA gate — Chromium/Firefox/WebKit/mobile, both themes (port 4620)
 npm run bench      # reproducible performance numbers (see docs/benchmarks.md)
 ```
 
