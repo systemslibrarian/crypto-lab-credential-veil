@@ -7,7 +7,20 @@
   --bg-inset: #241d33;
   --text: #ece7f6;
   --text-dim: #b9aed1;
+  /* Two boundary tokens, deliberately. `--border` is decoration: the hairline
+     around a panel, a card, a table cell. `--border-strong` is the one that has
+     to carry WCAG 1.4.11 — it is the ONLY thing delineating a control here, so
+     every control boundary uses it and nothing else does.
+
+     Measured from screenshot pixels on the surfaces these actually land on
+     (`--bg-panel` and, for `.hexblock`, the darker `--bg-inset`):
+       --border      #3a2f52 on #1c1727 = 1.42:1   (decoration; no requirement)
+       --border-strong #8477ad on #1c1727 = 4.32:1, on #241d33 = 4.01:1
+     Before this split every button, both focusable scrollers and all 64
+     status-list cells were bounded at 1.42:1, with fills 1.08:1 from the panel
+     behind them — so nothing on the page delineated a control at all. */
   --border: #3a2f52;
+  --border-strong: #8477ad;
   --accent-soft: #a855f7;
   --link: #c99af5;
   --ok: #7dd8a2;
@@ -25,7 +38,11 @@ html[data-theme='light'] {
   --bg-inset: #f2ecfa;
   --text: #241f31;
   --text-dim: #57496e;
+  /* Light has to clear the same 3:1, against a WHITE panel and the #f2ecfa
+     inset: #857a9c on #ffffff = 4.02:1, on #f2ecfa = 3.52:1. The old
+     #d5c8e8 measured 1.58:1 and 1.36:1. */
   --border: #d5c8e8;
+  --border-strong: #857a9c;
   --accent-soft: #6b21a8;
   --link: #6b21a8;
   --ok: #14683a;
@@ -140,8 +157,10 @@ body {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text);
+  /* The fill is 1.08:1 from the panel in dark and 1.16:1 in light, so the
+     border is the whole of this control's boundary and has to carry 3:1. */
   background: var(--bg-inset);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 0.5rem 0.95rem;
   cursor: pointer;
@@ -295,7 +314,11 @@ body {
   overflow-wrap: anywhere;
   word-break: break-all;
   background: var(--bg-panel);
-  border: 1px solid var(--border);
+  /* A focusable scrolling region (`tabindex="0"`, `role="region"`), so its
+     boundary is a control boundary under 1.4.11 — and it is the only thing
+     separating the block from the `--bg-inset` panel it sits in, which its own
+     fill is 1.08:1 away from. */
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   padding: 0.5rem 0.65rem;
   max-height: 9.5rem;
@@ -400,6 +423,12 @@ mark.common-bytes {
   margin: 0.4rem 0;
 }
 
+/* The 64 cells are the graphic this exhibit exists for, and `.bit-checked`
+   marks ONE of them with an outline — which cannot be read as "cell #17" unless
+   the cells themselves are visible as cells. The revoked cells were already
+   fine (their `--alarm` border measures 8.79:1 dark, 7.79:1 light); it was the
+   unrevoked EXTENT of the grid that was at 1.42:1 / 1.58:1, with a fill 1.08:1
+   from the panel. The fill passed, the extent did not. */
 .bit-grid .bit {
   width: 1.5rem;
   height: 1.5rem;
@@ -407,7 +436,7 @@ mark.common-bytes {
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   background: var(--bg-inset);
 }
 
@@ -431,7 +460,10 @@ html[data-theme='light'] .bit-grid .bit-revoked {
 .table-wrap {
   overflow-x: auto;
   margin: 0.5rem 0 0.75rem;
-  border: 1px solid var(--border);
+  /* Also a focusable scroller (`tabindex="0"`, `role="region"`): the tables it
+     wraps are `min-width: 44rem`, so at phone width this is the only route to
+     the columns beyond the fold and its edge is what says so. */
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
 }
 

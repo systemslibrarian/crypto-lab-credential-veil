@@ -42,6 +42,14 @@
        the hue still tints the brand but contrast stays >=4.5:1 on the bar even
        when a lab's accent is dark (e.g. a light-theme #1a56db). */
     --cl-ink: color-mix(in srgb, var(--accent, #35d6bb) 60%, #eafff8);
+    /* The mix above was applied to the header's INK only. The badge and button
+       BORDERS kept using raw `var(--accent)`, and this lab's accent is a dark
+       violet (#7e22ce) — on the always-dark bar that measured 2.66:1 for the
+       badge and 1.28:1 for the buttons, where 1.4.11 asks 3:1 of a control
+       boundary. So the boundaries are derived from `--cl-ink` too, which is the
+       colour the near-white mix was invented for. Measured on the bar:
+       --cl-ink 5.77:1; the 75% mix below 3.73:1. */
+    --cl-edge: color-mix(in srgb, var(--cl-ink) 75%, transparent);
     display:flex;align-items:center;justify-content:space-between;gap:1rem;
     padding:.7rem clamp(.9rem,3vw,2rem);
     background:#0b1512;
@@ -52,7 +60,7 @@
   .cl-brand{display:flex;align-items:center;gap:.8rem;text-decoration:none}
   .cl-badge{
     flex:0 0 auto;display:grid;place-items:center;width:40px;height:40px;
-    border:1.5px solid var(--accent, #35d6bb);border-radius:10px;
+    border:1.5px solid var(--cl-ink);border-radius:10px;
     color:var(--cl-ink);font-weight:700;font-size:.95rem;letter-spacing:.05em;
   }
   .cl-brand-text{display:flex;flex-direction:column;line-height:1.15}
@@ -62,14 +70,17 @@
   .cl-btn{
     display:inline-flex;align-items:center;gap:.4rem;
     padding:.5rem .85rem;border-radius:10px;
-    border:1px solid color-mix(in srgb, var(--accent, #35d6bb) 38%, transparent);
+    border:1px solid var(--cl-edge);
     background:transparent;color:var(--cl-ink);cursor:pointer;
     font:inherit;font-size:.78rem;font-weight:700;letter-spacing:.1em;
     text-transform:uppercase;text-decoration:none;transition:background .15s,border-color .15s,color .15s;
   }
   .cl-btn:hover{
     background:color-mix(in srgb, var(--accent, #35d6bb) 14%, transparent);
-    border-color:var(--accent, #35d6bb);color:#eafff8;
+    /* Hover previously dropped the border to raw --accent — 1.28:1 at rest
+       became 2.66:1 under the pointer, still short of 3:1. Hover must not be
+       the state where the boundary gets worse. */
+    border-color:var(--cl-ink);color:#eafff8;
   }
   .cl-btn svg{width:15px;height:15px}
   .cl-icon{padding:.5rem .6rem;font-size:.95rem}
@@ -302,7 +313,7 @@
         </p>
         <div class="btn-row">
           <button id="revoke-toggle" type="button">Revoke credential #17</button>
-          <button id="revoke-check" type="button">Verifier: check status of #17</button>
+          <button id="revoke-check" type="button" disabled>Verifier: check status of #17</button>
         </div>
         <div id="revoke-out" class="exhibit-out"></div>
         <p class="scope-note">

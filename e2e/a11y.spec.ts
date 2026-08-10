@@ -1,83 +1,53 @@
-import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { test } from '@playwright/test';
+import { boot, driveAllStates, NARROW, WIDE, reportCollected } from './gate';
 
-const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
+/**
+ * WCAG gate for Credential Veil.
+ *
+ * Four configurations — {dark, light} x {1280, 380} — because half of this
+ * lab's colour work only exists in one theme (`html[data-theme='light']`
+ * re-inverts every indicator, swapping fill and ink), and its two comparison
+ * tables, its six-up credential card and its 64-cell status grid only reflow at
+ * phone width.
+ *
+ * The spec this replaces ran two: dark and light, at the default viewport, with
+ * `violations` as the whole oracle, after suppressing every animation and
+ * transition with an injected style tag and force-opening every `<details>`
+ * from script. It drove fourteen interactions and then scanned ONCE, at the
+ * end — so thirteen real states were built and discarded unmeasured, and the
+ * reflow half of the standard was never exercised at all.
+ *
+ * `test.setTimeout` is high because the drive scans after every step and each
+ * scan runs axe plus a full composite-aware contrast walk; the crypto itself is
+ * off the main thread and is not the slow part.
+ */
 
-// The age-predicate proofs run real pairings in the page — give them room.
-test.setTimeout(360_000)
+// Not `mode: 'serial'`: the config already pins `workers: 1`, and serial mode
+// would SKIP the remaining configurations as soon as one failed — which is the
+// opposite of what a gate wants, since the interesting question is usually
+// which of the four a defect appears in.
+test.setTimeout(420_000);
 
-async function driveDemos(page: Page): Promise<void> {
-  await page.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important}` })
+test.describe('desktop viewport', () => {
+  test.use({ viewport: WIDE });
 
-  // wait for issuer setup to finish (buttons enable when ready)
-  await expect(page.locator('#baseline-run')).toBeEnabled({ timeout: 60_000 })
-
-  // exhibit 1 — baseline exposure
-  await page.locator('#baseline-run').click()
-  await expect(page.locator('#baseline-out .indicator-alarm')).toBeVisible({ timeout: 30_000 })
-
-  // exhibit 2 — selective disclosure + full step-through + both break-it paths
-  await page.locator('#sd-run').click()
-  await expect(page.locator('#sd-out .result-pair')).toBeVisible({ timeout: 60_000 })
-  for (let i = 0; i < 4; i++) {
-    await page.locator('#sd-step').click()
-    await expect(page.locator('#sd-steps li')).toHaveCount(i + 1, { timeout: 60_000 })
+  for (const theme of ['dark', 'light'] as const) {
+    test(`WCAG gate — ${theme}, 1280px`, async ({ page }) => {
+      const release = await boot(page, theme);
+      await driveAllStates(page, `${theme}/1280`, release);
+      reportCollected();
+    });
   }
-  await page.locator('#sd-tamper').click()
-  await expect(page.locator('#sd-break-out .result-pair')).toBeVisible({ timeout: 60_000 })
-  await page.locator('#sd-honest').click()
-  await expect(page.locator('#sd-break-out .indicator-ok')).toBeVisible({ timeout: 60_000 })
+});
 
-  // exhibit 3 — both unlinkability views (scan ends on the alarm baseline)
-  await page.locator('#unlink-bbs').click()
-  await expect(page.locator('#unlink-out .present-grid')).toBeVisible({ timeout: 120_000 })
-  await page.locator('#unlink-ed').click()
-  await expect(page.locator('#unlink-out .indicator-alarm')).toBeVisible({ timeout: 60_000 })
+test.describe('narrow viewport', () => {
+  test.use({ viewport: NARROW });
 
-  // exhibit 4 — all three age-predicate paths (accept, refuse, forged reject)
-  await page.locator('#age-adult').click()
-  await expect(page.locator('#age-out .result-pair')).toBeVisible({ timeout: 180_000 })
-  await page.locator('#age-minor').click()
-  await expect(page.locator('#age-out .indicator-ok')).toBeVisible({ timeout: 60_000 })
-  await page.locator('#age-forge').click()
-  await expect(page.locator('#age-out .verifier-view')).toBeVisible({ timeout: 180_000 })
-
-  // exhibit 5 — revoke, then verifier check (valid-proof + revoked-verdict pair)
-  await page.locator('#revoke-toggle').click()
-  await expect(page.locator('#revoke-out .bit-grid')).toBeVisible()
-  await page.locator('#revoke-check').click()
-  await expect(page.locator('#revoke-out .result-pair')).toBeVisible({ timeout: 120_000 })
-
-  // open all progressive disclosure
-  await page.evaluate(() => {
-    document.querySelectorAll('details').forEach((d) => {
-      d.open = true
-    })
-  })
-  await page.waitForTimeout(400)
-}
-
-async function scan(page: Page): Promise<void> {
-  const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze()
-  expect(
-    violations.map((v) => ({
-      id: v.id,
-      impact: v.impact,
-      nodes: v.nodes.map((n) => n.target.join(' ')).slice(0, 5),
-    })),
-  ).toEqual([])
-}
-
-test('no WCAG A/AA violations — dark theme', async ({ page }) => {
-  await page.goto('.')
-  await driveDemos(page)
-  await scan(page)
-})
-
-test('no WCAG A/AA violations — light theme', async ({ page }) => {
-  await page.goto('.')
-  await page.locator('#cl-theme-toggle').click()
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
-  await driveDemos(page)
-  await scan(page)
-})
+  for (const theme of ['dark', 'light'] as const) {
+    test(`WCAG gate — ${theme}, 380px`, async ({ page }) => {
+      const release = await boot(page, theme);
+      await driveAllStates(page, `${theme}/380`, release);
+      reportCollected();
+    });
+  }
+});

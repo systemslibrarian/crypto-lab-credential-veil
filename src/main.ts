@@ -174,7 +174,12 @@ async function setup(): Promise<void> {
     'Ready. BBS signature (one signature over all six fields): ' +
     bytesToHex(state.adult.signature).slice(0, 32) +
     '… (80 bytes). Ed25519 baseline signature also issued. Keys live only in this tab.'
-  for (const id of ['baseline-run', 'sd-run', 'sd-step', 'unlink-bbs', 'unlink-ed', 'age-adult', 'age-minor', 'age-forge']) {
+  // `revoke-check` belongs on this list even though the status list itself is
+  // local state: its handler opens `if (!state) return`, so before the issuer
+  // keys exist the button was live and did nothing at all when pressed — a
+  // silent dead click for as long as setup takes. `revoke-toggle` is genuinely
+  // independent of the keys and stays enabled throughout.
+  for (const id of ['baseline-run', 'sd-run', 'sd-step', 'unlink-bbs', 'unlink-ed', 'age-adult', 'age-minor', 'age-forge', 'revoke-check']) {
     byId<HTMLButtonElement>(id).disabled = false
   }
 }
