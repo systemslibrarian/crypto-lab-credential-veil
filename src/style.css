@@ -37,6 +37,19 @@ html[data-theme='light'] {
   --neutral-chip: #ece4f7;
 }
 
+/* Without this, `width: 100%` plus padding is WIDER than its container.
+   `.cl-hero-why` takes `width: 100%` below 640px and carries .85rem/1.05rem of
+   padding and a 1px border — 35.6px in total — so under the default
+   `content-box` the hero aside came out 391.6px inside a 356px column and the
+   document scrolled sideways at every phone width, in every state, from first
+   paint (WCAG 1.4.10). The shared `.cl-hero` block is copied into every lab and
+   assumes this reset; the labs that set it never saw the bug. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html {
   background-color: #14101c;
   color-scheme: dark;
