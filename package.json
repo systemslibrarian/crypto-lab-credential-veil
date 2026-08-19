@@ -21,6 +21,6 @@
   },
   "dependencies": {
     "@noble/curves": "^1.9.7",
-    "@noble/hashes": "^1.7.1"
+    "@noble/hashes": "^2.3.0"
   }
 }
