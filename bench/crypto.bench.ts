@@ -39,27 +39,27 @@ const SLOW = { warmupIterations: 1, iterations: 3 }
 
 describe('BBS core (6-message credential)', () => {
   test('sign', async ({ bench }) => {
-    await bench('sign', FAST, () => void issueBbs(issuer, FIELDS)).run()
+    await bench('sign', () => void issueBbs(issuer, FIELDS)).run(FAST)
   })
   test('present — reveal 1 of 6', async ({ bench }) => {
-    await bench('present — reveal 1 of 6', FAST, () => void present(cred, ['class'], PH)).run()
+    await bench('present — reveal 1 of 6', () => void present(cred, ['class'], PH)).run(FAST)
   })
   test('present — reveal all 6', async ({ bench }) => {
-    await bench('present — reveal all 6', FAST, () => void present(cred, [...(Object.keys(FIELDS) as (keyof CredentialFields)[])], PH)).run()
+    await bench('present — reveal all 6', () => void present(cred, [...(Object.keys(FIELDS) as (keyof CredentialFields)[])], PH)).run(FAST)
   })
   test('verify presentation — 1 of 6', async ({ bench }) => {
-    await bench('verify presentation — 1 of 6', FAST, () => void verifyPresentation(issuer.pk, pres1)).run()
+    await bench('verify presentation — 1 of 6', () => void verifyPresentation(issuer.pk, pres1)).run(FAST)
   })
   test('verify presentation — all 6', async ({ bench }) => {
-    await bench('verify presentation — all 6', FAST, () => void verifyPresentation(issuer.pk, presAll)).run()
+    await bench('verify presentation — all 6', () => void verifyPresentation(issuer.pk, presAll)).run(FAST)
   })
 })
 
 describe('age predicate (15-bit range proof, linked)', () => {
   test('prove age ≥ 18', async ({ bench }) => {
-    await bench('prove age ≥ 18', SLOW, () => void proveAge(cred, CUTOFF)).run()
+    await bench('prove age ≥ 18', () => void proveAge(cred, CUTOFF)).run(SLOW)
   })
   test('verify age proof', async ({ bench }) => {
-    await bench('verify age proof', SLOW, () => void verifyAge(issuer.pk, ageProof, CUTOFF)).run()
+    await bench('verify age proof', () => void verifyAge(issuer.pk, ageProof, CUTOFF)).run(SLOW)
   })
 })
