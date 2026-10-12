@@ -207,12 +207,14 @@
         </p>
         <p class="scope-note">
           <strong>Honest scope:</strong> this is a teaching demo, not production crypto. The BBS signatures, proofs,
-          pairings, Ed25519 baseline and the age range-proof on this page are all real and run in your browser (KAT-tested
-          against the official draft-irtf-cfrg-bbs-signatures fixtures). The credential data, issuer, and wallet are
+          pairings, Ed25519 baseline and the custom age range-proof on this page are all real and run in your browser.
+          The BBS core is checked against publisher fixtures; the custom age proof has separate teaching tests.
+          The credential data, issuer, and wallet are
           stage props: keys live only in this tab's memory. What this page does <em>not</em> prove: that a real
           deployment is private — issuer collusion, network metadata, and revealing identifying values (your name is
           your name) all sit outside what the math can protect.
         </p>
+          <p id="bbs-baseline">Our BBS SHA-256 baseline is checked against <a href="https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-12.txt" target="_blank" rel="noreferrer">draft-12 (28 September 2026)</a> and matching <a href="https://github.com/decentralized-identity/bbs-signature/tree/79ad844c7b9d960266095e347bb7cdadf1542809/tooling/fixtures/fixture_data/bls12-381-sha-256" target="_blank" rel="noreferrer">versioned publisher test vectors</a>. The draft remains work in progress. See the <a href="https://github.com/systemslibrarian/crypto-lab-credential-veil/blob/main/docs/bbs-baseline-review.md" target="_blank" rel="noreferrer">review and validation scope</a>. These checks do not validate this lab’s custom age proof or browser side channels.</p>
       </section>
 
       <section class="panel" aria-labelledby="setup-h">
@@ -280,7 +282,6 @@
           <summary>Issuing a signature is different from showing it</summary>
           <p>CoreSign here is deterministic for a fixed key, signed tuple and header/domain. Issuing a changed tuple creates a new artifact; repeating the same issuance reproduces the same signature. The buttons above rerandomize proof presentations of one already-issued credential, without contacting the issuer.</p>
           <p><a href="https://eprint.iacr.org/2025/1093" target="_blank" rel="noreferrer">Concrete BBS security (ASIACRYPT 2025; revised 22 October 2025)</a> gives q-dependent issuer-key recovery costs: q describes signature exposure, not presentation count. <a href="https://eprint.iacr.org/2025/1973" target="_blank" rel="noreferrer">Tight BBS security (EUROCRYPT 2026; revised 20 February 2026)</a> distinguishes deterministic / once-per-message issuance from multiple randomized signatures of one message. Its proof-tightness limitation is not an exploit.</p>
-          <p>The current <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-12" target="_blank" rel="noreferrer">draft-12 (28 September 2026)</a> remains work in progress. Our claimed historical editor snapshot was unavailable; fixture integrity and a numbered comparison reference are recorded in the repository’s spec provenance. These results do not validate this lab’s custom age proof or browser side channels.</p>
         </details>
 
       </section>

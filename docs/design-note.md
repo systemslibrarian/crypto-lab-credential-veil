@@ -30,6 +30,11 @@ supplies only BLS12-381 group arithmetic, pairings, and `expand_message_xmd` /
 `hash_to_curve`. The KATs in `src/bbs/fixtures/` pin the hand-rolled parts to the
 official fixture outputs (see [spec-provenance.md](spec-provenance.md)).
 
+The current numbered reference and publisher snapshot are recorded in the
+[draft-12 baseline review](bbs-baseline-review.md). Its source/encoding review
+and known-answer checks cover the SHA-256 BBS core. The custom DOB mapping and
+age-predicate transcript below retain their separate teaching scope.
+
 ---
 
 ## Statement 1 — selective-disclosure presentation

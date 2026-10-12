@@ -1,5 +1,5 @@
 /**
- * BBS ciphersuite BLS12-381-SHA-256 (draft-irtf-cfrg-bbs-signatures).
+ * BBS ciphersuite BLS12-381-SHA-256 (draft-irtf-cfrg-bbs-signatures-12).
  *
  * ciphersuite_id: "BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_"
  * api_id (signatures interface): ciphersuite_id || "H2G_HM2S_"
@@ -47,6 +47,7 @@ export function concat(...parts: Uint8Array[]): Uint8Array {
 
 export function hexToBytes(hex: string): Uint8Array {
   if (hex.length % 2 !== 0) throw new Error('odd-length hex')
+  if (!/^[0-9a-fA-F]*$/.test(hex)) throw new Error('bad hex')
   const out = new Uint8Array(hex.length / 2)
   for (let i = 0; i < out.length; i++) {
     const b = Number.parseInt(hex.slice(2 * i, 2 * i + 2), 16)

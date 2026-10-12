@@ -1,5 +1,5 @@
 /**
- * create_generators (draft §Generators Calculation) for BLS12-381-SHA-256.
+ * create_generators (draft-12 §4.1.1) for BLS12-381-SHA-256.
  * Deterministic: seeded expand_message_xmd chain, each state hashed to G1.
  */
 import { bls12_381 } from '@noble/curves/bls12-381.js'
@@ -21,6 +21,7 @@ function hashToCurveG1(msg: Uint8Array, dst: Uint8Array): G1Point {
 }
 
 export function createGenerators(count: number, apiId: string, seedTag = 'MESSAGE_GENERATOR_SEED'): G1Point[] {
+  if (!Number.isSafeInteger(count) || count < 0) throw new Error('generator count must be a non-negative safe integer')
   const seedDst = ascii(apiId + 'SIG_GENERATOR_SEED_')
   const generatorDst = ascii(apiId + 'SIG_GENERATOR_DST_')
   let v = expandMessage(ascii(apiId + seedTag), seedDst, EXPAND_LEN)
@@ -35,6 +36,7 @@ export function createGenerators(count: number, apiId: string, seedTag = 'MESSAG
 // Interface generators are constants — cache and extend on demand.
 const cache: G1Point[] = []
 export function interfaceGenerators(count: number): G1Point[] {
+  if (!Number.isSafeInteger(count) || count < 0) throw new Error('generator count must be a non-negative safe integer')
   if (cache.length < count) {
     cache.length = 0
     cache.push(...createGenerators(count, API_ID))

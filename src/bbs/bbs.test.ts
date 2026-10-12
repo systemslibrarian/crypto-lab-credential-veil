@@ -22,6 +22,11 @@ import {
   proofVerify,
   messagesToScalars,
   seededRandomScalars,
+  octetsToSignature,
+  octetsToProof,
+  proofInit,
+  proofVerifyInit,
+  proofChallenge,
   type RandomScalarsFn,
 } from './bbs'
 
@@ -38,6 +43,7 @@ interface SignatureFixture {
   messages: string[]
   signature: string
   result: { valid: boolean; reason?: string }
+  trace: { B: string; domain: string }
 }
 
 interface ProofFixture {
@@ -50,6 +56,7 @@ interface ProofFixture {
   disclosedIndexes: number[]
   proof: string
   result: { valid: boolean; reason?: string }
+  trace: { A_bar: string; B_bar: string; D: string; T1: string; T2: string; domain: string; challenge: string }
 }
 
 const signatureFixtures = Object.entries(
@@ -120,6 +127,10 @@ describe('spec KATs — signatures', () => {
       if (fixture.result.valid) {
         const sk = BigInt('0x' + fixture.signerKeyPair.secretKey)
         expect(bytesToHex(sign(sk, pk, header, messages))).toBe(fixture.signature)
+        // Independent equation check against the publisher's frozen B trace.
+        const parsed = octetsToSignature(hexToBytes(fixture.signature))
+        const B = parsed.A.multiply((sk + parsed.e) % BigInt('0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
+        expect(bytesToHex(pointToOctetsG1(B))).toBe(fixture.trace.B)
       }
     })
   }
@@ -135,6 +146,22 @@ describe('spec KATs — proofs', () => {
       const valid = proofVerify(pk, hexToBytes(fixture.proof), header, ph, disclosed, fixture.disclosedIndexes)
       expect(valid).toBe(fixture.result.valid)
       if (fixture.result.valid) {
+        const scalars = messagesToScalars(fixture.messages.map(hexToBytes))
+        const generators = interfaceGenerators(scalars.length + 1)
+        const hidden = scalars.map((_, i) => i).filter(i => !fixture.disclosedIndexes.includes(i))
+        const generation = proofInit(pk, octetsToSignature(hexToBytes(fixture.signature)), generators,
+          mockedRandFn(5 + hidden.length), header, scalars, hidden, API_ID)
+        const verification = proofVerifyInit(pk, octetsToProof(hexToBytes(fixture.proof)), generators,
+          header, fixture.disclosedIndexes.map(i => scalars[i]), fixture.disclosedIndexes, API_ID)
+        for (const intermediate of [generation, verification]) {
+          for (const [field, expected] of [
+            ['Abar', fixture.trace.A_bar], ['Bbar', fixture.trace.B_bar], ['D', fixture.trace.D],
+            ['T1', fixture.trace.T1], ['T2', fixture.trace.T2],
+          ] as const) expect(bytesToHex(pointToOctetsG1(intermediate[field]))).toBe(expected)
+          expect(scalarHex(intermediate.domain)).toBe(fixture.trace.domain)
+          expect(scalarHex(proofChallenge(intermediate, fixture.disclosedIndexes.map(i => scalars[i]),
+            fixture.disclosedIndexes, ph, API_ID))).toBe(fixture.trace.challenge)
+        }
         const proof = proofGen(
           pk,
           hexToBytes(fixture.signature),

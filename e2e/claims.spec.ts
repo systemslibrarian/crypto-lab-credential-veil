@@ -1,4 +1,19 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+const provenance = JSON.parse(readFileSync(new URL('../docs/provenance-pins.json', import.meta.url), 'utf8'))
+
+test('the current BBS baseline and its limits are visible with immutable source links', async ({ page }) => {
+  await page.goto('.')
+  const baseline = page.locator('#bbs-baseline')
+  await expect(baseline).toBeVisible()
+  await expect(baseline).toContainText('BBS SHA-256 baseline')
+  await expect(baseline).toContainText('work in progress')
+  await expect(baseline).toContainText('do not validate this lab’s custom age proof')
+  await expect(baseline.locator('a').nth(0)).toHaveAttribute('href', provenance.reference.url)
+  await expect(baseline.locator('a').nth(1)).toHaveAttribute('href',
+    `https://github.com/${provenance.upstream.repository}/tree/${provenance.upstream.commit}/${provenance.upstream.fixtureBasePath}`)
+  expect(await baseline.evaluate(el => Boolean(el.closest('details')))).toBe(false)
+})
 
 /**
  * Functional gate for the claims this lab makes on screen.

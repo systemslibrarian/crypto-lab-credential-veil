@@ -1,5 +1,5 @@
 /**
- * BBS signatures (draft-irtf-cfrg-bbs-signatures), BLS12-381-SHA-256 suite.
+ * BBS signatures (draft-irtf-cfrg-bbs-signatures-12), BLS12-381-SHA-256 suite.
  * Hand-rolled to the draft's pseudocode; validated against the official
  * fixture KATs in ./fixtures.
  */
@@ -33,6 +33,29 @@ import { P1, interfaceGenerators } from './generators'
 
 export type RandomScalarsFn = (count: number) => bigint[]
 
+function assertScalar(value: bigint, label: string, nonzero = false): void {
+  if (typeof value !== 'bigint' || value < (nonzero ? 1n : 0n) || value >= r)
+    throw new Error(`${label}: scalar out of range`)
+}
+
+function assertScalars(values: bigint[], label: string): void {
+  for (const value of values) assertScalar(value, label)
+}
+
+/** Draft-12 arrays are sets of integer indexes in strictly ascending order. */
+function assertIndexes(indexes: number[], total: number, label: string): void {
+  let previous = -1
+  for (const index of indexes) {
+    if (!Number.isSafeInteger(index) || index < 0 || index >= total || index <= previous)
+      throw new Error(`${label}: indexes must be distinct, ascending integers in range`)
+    previous = index
+  }
+}
+
+function assertCount(count: number): void {
+  if (!Number.isSafeInteger(count) || count < 0) throw new Error('count must be a non-negative safe integer')
+}
+
 // ---------------------------------------------------------------------------
 // Key generation
 // ---------------------------------------------------------------------------
@@ -50,7 +73,8 @@ export function keyGen(keyMaterial: Uint8Array, keyInfo: Uint8Array = new Uint8A
 
 /** SkToPk: W = SK * BP2, compressed (96 bytes). */
 export function skToPk(sk: bigint): Uint8Array {
-  return pointToOctetsG2(bls12_381.G2.Point.BASE.multiply(modR(sk)))
+  assertScalar(sk, 'secret key', true)
+  return pointToOctetsG2(bls12_381.G2.Point.BASE.multiply(sk))
 }
 
 export function randomKeyMaterial(): Uint8Array {
@@ -71,6 +95,7 @@ export function messagesToScalars(messages: Uint8Array[], apiId: string = API_ID
 
 /** calculate_random_scalars: independent CSPRNG draws, 48 bytes each, mod r. */
 export const calculateRandomScalars: RandomScalarsFn = (count) => {
+  assertCount(count)
   const out: bigint[] = []
   for (let i = 0; i < count; i++) {
     const bytes = new Uint8Array(EXPAND_LEN)
@@ -82,6 +107,7 @@ export const calculateRandomScalars: RandomScalarsFn = (count) => {
 
 /** seeded_random_scalars (draft §Mocked Random Scalars) — used only by the KATs. */
 export function seededRandomScalars(seed: Uint8Array, dst: Uint8Array, count: number): bigint[] {
+  assertCount(count)
   const outLen = EXPAND_LEN * count
   if (outLen > 65535) throw new Error('too many scalars')
   const v = expandMessage(seed, dst, outLen)
@@ -127,6 +153,11 @@ export function coreSign(
   messages: bigint[],
   apiId: string,
 ): Uint8Array {
+  assertScalar(sk, 'secret key', true)
+  assertScalars(messages, 'message')
+  const expectedPk = skToPk(sk)
+  if (pk.length !== expectedPk.length || pk.some((byte, i) => byte !== expectedPk[i]))
+    throw new Error('public key does not match the secret key')
   if (generators.length !== messages.length + 1) throw new Error('generators/messages length mismatch')
   const domain = calculateDomain(pk, generators[0], generators.slice(1), header, apiId)
   const eElems: SerializableElement[] = [{ t: 'scalar', v: sk }]
@@ -168,6 +199,7 @@ export function coreVerify(
   apiId: string,
 ): boolean {
   try {
+    assertScalars(messages, 'message')
     const { A, e } = octetsToSignature(signature)
     const W = octetsToPubkey(pk)
     if (generators.length !== messages.length + 1) return false
@@ -206,9 +238,11 @@ export function proofInit(
 ): ProofInitResult {
   const L = messages.length
   const U = undisclosedIndexes.length
+  assertScalars(messages, 'message')
+  assertScalars(randomScalars, 'random scalar')
+  assertIndexes(undisclosedIndexes, L, 'undisclosed')
   if (randomScalars.length !== U + 5) throw new Error('random scalars length mismatch')
   if (generators.length !== L + 1) throw new Error('generators length mismatch')
-  for (const j of undisclosedIndexes) if (j < 0 || j > L - 1) throw new Error('undisclosed index out of range')
   const [r1, r2, eTilde, r1Tilde, r3Tilde, ...mTilde] = randomScalars
   const domain = calculateDomain(pk, generators[0], generators.slice(1), header, apiId)
   const B = computeB(domain, generators, messages)
@@ -234,6 +268,8 @@ export function proofChallenge(
   extra: SerializableElement[] = [],
 ): bigint {
   if (disclosedMessages.length !== disclosedIndexes.length) throw new Error('disclosed length mismatch')
+  assertScalars(disclosedMessages, 'disclosed message')
+  assertIndexes(disclosedIndexes, Number.MAX_SAFE_INTEGER, 'disclosed')
   const elems: SerializableElement[] = [{ t: 'int', v: disclosedIndexes.length }]
   disclosedIndexes.forEach((i, k) => {
     elems.push({ t: 'int', v: i }, { t: 'scalar', v: disclosedMessages[k] })
@@ -260,6 +296,10 @@ export function proofFinalize(
   undisclosedMessages: bigint[],
 ): Uint8Array {
   const U = undisclosedMessages.length
+  assertScalar(challenge, 'challenge', true)
+  assertScalar(eValue, 'signature e', true)
+  assertScalars(randomScalars, 'random scalar')
+  assertScalars(undisclosedMessages, 'undisclosed message')
   if (randomScalars.length !== U + 5) throw new Error('random scalars length mismatch')
   const [r1, r2, eTilde, r1Tilde, r3Tilde, ...mTilde] = randomScalars
   const r3 = bls12_381.fields.Fr.inv(modR(r2))
@@ -278,6 +318,12 @@ export function proofFinalize(
     elems.push({ t: 'scalar', v: modR(mTilde[j] + m * challenge) })
   })
   elems.push({ t: 'scalar', v: challenge })
+  // §4.2.4.4: output points are nonidentity and proof scalars are nonzero.
+  // A rare degenerate RNG/transcript must abort, not produce rejected octets.
+  for (const elem of elems) {
+    if (elem.t === 'scalar') assertScalar(elem.v, 'proof scalar', true)
+    else if (elem.t === 'g1' && elem.v.equals(G1.ZERO)) throw new Error('proof point is identity')
+  }
   return serialize(elems)
 }
 
@@ -338,7 +384,8 @@ export function proofVerifyInit(
   const U = proof.mHat.length
   const R = disclosedIndexes.length
   const L = R + U
-  for (const i of disclosedIndexes) if (i < 0 || i > L - 1) throw new Error('disclosed index out of range')
+  assertIndexes(disclosedIndexes, L, 'disclosed')
+  assertScalars(disclosedMessages, 'disclosed message')
   if (disclosedMessages.length !== R) throw new Error('disclosed messages length mismatch')
   if (generators.length !== L + 1) throw new Error('generators length mismatch')
   const disclosedSet = new Set(disclosedIndexes)
@@ -370,8 +417,10 @@ export function coreProofGen(
 ): Uint8Array {
   const sig = octetsToSignature(signature)
   const L = messages.length
-  const sorted = [...disclosedIndexes].sort((a, b) => a - b)
-  for (const i of sorted) if (i < 0 || i > L - 1) throw new Error('disclosed index out of range')
+  assertIndexes(disclosedIndexes, L, 'disclosed')
+  if (!coreVerify(pk, signature, generators, header, messages, apiId))
+    throw new Error('cannot prove an invalid signature or signing context')
+  const sorted = [...disclosedIndexes]
   const disclosedSet = new Set(sorted)
   if (disclosedSet.size !== sorted.length) throw new Error('duplicate disclosed index')
   const undisclosed = Array.from({ length: L }, (_, i) => i).filter((i) => !disclosedSet.has(i))

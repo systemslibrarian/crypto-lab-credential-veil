@@ -1,135 +1,206 @@
 {
+  "schemaVersion": 2,
   "recordedAt": "2026-10-12",
-  "historicalEditorSnapshot": "unavailable: no spec-notes snapshot found in repository history; original upstream revision not established",
-  "baselineLabCommit": "976b4507ad9dbf5f9334f7599e1e488a8142a6aa",
+  "baselineId": "draft-12-sha256-20261012",
   "reference": {
     "version": "draft-irtf-cfrg-bbs-signatures-12",
     "published": "2026-09-28",
     "status": "Active Internet-Draft, work in progress",
-    "role": "comparison only; not established as the historical implementation reference",
+    "role": "active implementation validation baseline for the declared SHA-256 BBS scope; not a final RFC",
     "url": "https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-12.txt",
     "sha256": "9f2123df0f33ee8c5ffa75efb746f71e24eafd2e895ab8ba3245eaf6bc5be409"
+  },
+  "upstream": {
+    "repository": "decentralized-identity/bbs-signature",
+    "commit": "79ad844c7b9d960266095e347bb7cdadf1542809",
+    "selection": "Updates for draft 12 commit; newly selected validation baseline, not asserted as the original download revision",
+    "fixtureBasePath": "tooling/fixtures/fixture_data/bls12-381-sha-256",
+    "artifacts": [
+      {
+        "path": "draft-irtf-cfrg-bbs-signatures.md",
+        "sha256": "8a89fababf904d8cdc2c34475ee9143268e8d9cba07dcf600cae4d66667e8353"
+      },
+      {
+        "path": "tooling/fixtures/index.ts",
+        "sha256": "ca6ef928605c22bdedd6fc6ca2cc9cdd513ade359e6a0dc36125c12468b4a93b"
+      },
+      {
+        "path": "tooling/fixtures/fetchFixtures.ts",
+        "sha256": "1f79aed06eb26b90d56b892ce1101d0a4ac4391063d76a33ccd3554dbddbeb59"
+      },
+      {
+        "path": "tooling/fixtures/package.json",
+        "sha256": "7ac1aeb631889cdda0157a035a5feeb22be246a6b98914d6f2b60674bcc50bd3"
+      },
+      {
+        "path": "LICENSE",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    ]
+  },
+  "historical": {
+    "previousLabCommit": "de715f85a46ceb98b7cbbf013c451e193da78e07",
+    "originalSourceRevision": "unknown",
+    "preservation": "All 30 prior fixture byte sequences remain unchanged; previous provenance is retained in Git history."
+  },
+  "scope": {
+    "suite": "BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_",
+    "apiId": "BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2G_HM2S_",
+    "signatureCases": 10,
+    "proofCases": 15,
+    "fixtureFileCount": 30,
+    "claim": "Reviewed SHA-256 BBS implementation baseline and publisher-vector validation, not certification of all ciphersuites, browser side channels or the custom age-proof composition"
   },
   "fixtures": [
     {
       "path": "src/bbs/fixtures/MapMessageToScalarAsHash.json",
-      "sha256": "9bc985edaa26d4c008e11c92c9945098d7407ef3682a230cc53a76c4f14551ac"
+      "sha256": "9bc985edaa26d4c008e11c92c9945098d7407ef3682a230cc53a76c4f14551ac",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/MapMessageToScalarAsHash.json"
     },
     {
       "path": "src/bbs/fixtures/generators.json",
-      "sha256": "6fdadb7935468abdbde3606b0adc4bd560b027b0221c53536cc8ff1abca0c6a3"
+      "sha256": "6fdadb7935468abdbde3606b0adc4bd560b027b0221c53536cc8ff1abca0c6a3",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/generators.json"
     },
     {
       "path": "src/bbs/fixtures/h2s.json",
-      "sha256": "8876364b392284109a31e4f19a6f278ec89f9a666bfd37e79d8510aa93c3f5c3"
+      "sha256": "8876364b392284109a31e4f19a6f278ec89f9a666bfd37e79d8510aa93c3f5c3",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/h2s.json"
     },
     {
       "path": "src/bbs/fixtures/keypair.json",
-      "sha256": "e1eacc2776dc625bb47400c38fe48b4642dd01285a8d9cc36dafad130ebcb110"
+      "sha256": "e1eacc2776dc625bb47400c38fe48b4642dd01285a8d9cc36dafad130ebcb110",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/keypair.json"
     },
     {
       "path": "src/bbs/fixtures/mockedRng.json",
-      "sha256": "b1028723304b6a225033e82dfb879d31625bebcada662a58fe7820bac57941fd"
+      "sha256": "b1028723304b6a225033e82dfb879d31625bebcada662a58fe7820bac57941fd",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/mockedRng.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof001.json",
-      "sha256": "6210c761de88fbd5933a11169a5fc475425c45001667b7c416a68b5fcacf47bc"
+      "sha256": "6210c761de88fbd5933a11169a5fc475425c45001667b7c416a68b5fcacf47bc",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof001.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof002.json",
-      "sha256": "76ce779cb083e8b542cc1f3cf9b9ad819ee716b6e2642ba7b5a6fca12851648a"
+      "sha256": "76ce779cb083e8b542cc1f3cf9b9ad819ee716b6e2642ba7b5a6fca12851648a",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof002.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof003.json",
-      "sha256": "f8d5e429accacf9f5a38edc6d1447e27e73b3c5dd7a033877b4b3c25f3e77d07"
+      "sha256": "f8d5e429accacf9f5a38edc6d1447e27e73b3c5dd7a033877b4b3c25f3e77d07",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof003.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof004.json",
-      "sha256": "fac5bda0b4213b981d39b2426c5566df78dc1c84334b3bccdb93c9d2a7924283"
+      "sha256": "fac5bda0b4213b981d39b2426c5566df78dc1c84334b3bccdb93c9d2a7924283",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof004.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof005.json",
-      "sha256": "d44dd34fab9df691be19315d8521ac510e2ad9ea4851f6caf3dba0ca8f3eda63"
+      "sha256": "d44dd34fab9df691be19315d8521ac510e2ad9ea4851f6caf3dba0ca8f3eda63",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof005.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof006.json",
-      "sha256": "2a59585a2e3b4c98a606b5815197915ac798b26787a97d45e0d05db9a9c559e4"
+      "sha256": "2a59585a2e3b4c98a606b5815197915ac798b26787a97d45e0d05db9a9c559e4",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof006.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof007.json",
-      "sha256": "d639630cb903da069efa804920e517c4f4c25a06aeb7698591395351c0676304"
+      "sha256": "d639630cb903da069efa804920e517c4f4c25a06aeb7698591395351c0676304",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof007.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof008.json",
-      "sha256": "caa7ab68b6967e0cc7b01f9b4131bfce791b169adb41e0df9db039a92b173bf5"
+      "sha256": "caa7ab68b6967e0cc7b01f9b4131bfce791b169adb41e0df9db039a92b173bf5",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof008.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof009.json",
-      "sha256": "9f9acbcd02023327bcbe7fa68cde41131ba71f2a5dabc5e49ed9f2f2916cbcad"
+      "sha256": "9f9acbcd02023327bcbe7fa68cde41131ba71f2a5dabc5e49ed9f2f2916cbcad",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof009.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof010.json",
-      "sha256": "88f45298e7df9959b3146b5dadedea2b7023ae3212505d33626d998ea8422fda"
+      "sha256": "88f45298e7df9959b3146b5dadedea2b7023ae3212505d33626d998ea8422fda",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof010.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof011.json",
-      "sha256": "f1d75ed33af104bf7d12b7810f73c8d1525c8f1fb137efadb31c61a0e860c050"
+      "sha256": "f1d75ed33af104bf7d12b7810f73c8d1525c8f1fb137efadb31c61a0e860c050",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof011.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof012.json",
-      "sha256": "5fe01f26f4899337403a99952f32e03d8ba1b27afe0961452c6e6488708f187a"
+      "sha256": "5fe01f26f4899337403a99952f32e03d8ba1b27afe0961452c6e6488708f187a",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof012.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof013.json",
-      "sha256": "d5b8458891b23f2cd64bbe23af74b60d6d84dc6047b2e70f909e5561298243e7"
+      "sha256": "d5b8458891b23f2cd64bbe23af74b60d6d84dc6047b2e70f909e5561298243e7",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof013.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof014.json",
-      "sha256": "d0ad2a93500744a67fe1e4fc04a043031cb16c9041dc874f880f8c4ef5b59341"
+      "sha256": "d0ad2a93500744a67fe1e4fc04a043031cb16c9041dc874f880f8c4ef5b59341",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof014.json"
     },
     {
       "path": "src/bbs/fixtures/proof/proof015.json",
-      "sha256": "cb7d1489af09f06fe2b7c57beb9fa5d31ba87648c7035939ba64974d9b2c6741"
+      "sha256": "cb7d1489af09f06fe2b7c57beb9fa5d31ba87648c7035939ba64974d9b2c6741",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/proof/proof015.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature001.json",
-      "sha256": "6fd73f64f4f34e252c1b2cda74906572f80fd542249838635bf82f65c2601ae9"
+      "sha256": "6fd73f64f4f34e252c1b2cda74906572f80fd542249838635bf82f65c2601ae9",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature001.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature002.json",
-      "sha256": "e37675375962837c5d4d9cde3adabdd162b271eab6dfde56fa9ae07eed3ae4dd"
+      "sha256": "e37675375962837c5d4d9cde3adabdd162b271eab6dfde56fa9ae07eed3ae4dd",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature002.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature003.json",
-      "sha256": "a3a25309b6c14eed6c3244b0327513d0b726ef672a563c1c876475cb9db67c15"
+      "sha256": "a3a25309b6c14eed6c3244b0327513d0b726ef672a563c1c876475cb9db67c15",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature003.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature004.json",
-      "sha256": "75cfd86fb92c091070d3734f5ae181f71b97ea78f966a24805e1088c8f3b2951"
+      "sha256": "75cfd86fb92c091070d3734f5ae181f71b97ea78f966a24805e1088c8f3b2951",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature004.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature005.json",
-      "sha256": "729450a28d70d17a37a73b54aba68110fba0b965c01ac9d458c6a2dd97dfaf35"
+      "sha256": "729450a28d70d17a37a73b54aba68110fba0b965c01ac9d458c6a2dd97dfaf35",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature005.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature006.json",
-      "sha256": "ef8a58b6bffa6538b16b30b7c85534b1d5c3df00e13e755fe1e27e098282104a"
+      "sha256": "ef8a58b6bffa6538b16b30b7c85534b1d5c3df00e13e755fe1e27e098282104a",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature006.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature007.json",
-      "sha256": "a01a28e281a07611fcaa42fe11e45f5e43118dba4c7e196a5f194ddf6c447132"
+      "sha256": "a01a28e281a07611fcaa42fe11e45f5e43118dba4c7e196a5f194ddf6c447132",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature007.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature008.json",
-      "sha256": "afa33b538ccbebe847c7f5ad5574b02eecdd9e3fb4dcfe3654ceb0f68ea0c9ec"
+      "sha256": "afa33b538ccbebe847c7f5ad5574b02eecdd9e3fb4dcfe3654ceb0f68ea0c9ec",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature008.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature009.json",
-      "sha256": "88989a63b97680af8635be8bce7cdd6d7309e326bd40ef05263dfa1099147f5e"
+      "sha256": "88989a63b97680af8635be8bce7cdd6d7309e326bd40ef05263dfa1099147f5e",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature009.json"
     },
     {
       "path": "src/bbs/fixtures/signature/signature010.json",
-      "sha256": "293adb2b8a8c14b7be68554f2a957d2bab86117105399dea27c51ed88e306f46"
+      "sha256": "293adb2b8a8c14b7be68554f2a957d2bab86117105399dea27c51ed88e306f46",
+      "upstreamPath": "tooling/fixtures/fixture_data/bls12-381-sha-256/signature/signature010.json"
     }
   ]
 }

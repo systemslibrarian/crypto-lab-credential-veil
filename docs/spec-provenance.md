@@ -1,13 +1,16 @@
 # Credential Veil — Spec & Fixture Provenance
 
-Exactly which specification text, test fixtures, and library versions this lab's
-claims rest on.
+The active baseline is **draft-12-sha256-20261012**, established 12 October 2026:
+a numbered BBS draft, an immutable publisher source/fixture snapshot, a
+source review of the declared SHA-256 BBS operations, and executed tests.
+This is a reproducible implementation baseline, not a final standard or
+certification of the complete credential application.
 
 ## Specification
 
-- **Historical implementation reference:** earlier documentation claimed a verbatim July 17, 2026 editor-draft snapshot existed at `spec-notes/draft-irtf-cfrg-bbs-signatures.md`. That file is absent, including from the available repository history checked on 12 October 2026. Its exact original upstream revision is **not established**; the claim of a committed snapshot has been removed rather than inventing one.
-- **Versioned comparison reference:** [draft-irtf-cfrg-bbs-signatures-12](https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-12.txt), published 28 September 2026, SHA-256 `9f2123df0f33ee8c5ffa75efb746f71e24eafd2e895ab8ba3245eaf6bc5be409`. This is a work-in-progress Internet-Draft, not a final RFC. Its CoreSign deterministic scalar derivation was reviewed against `src/bbs/bbs.ts`; this limited comparison and existing KATs **do not establish complete draft-12 conformance**, historical source provenance or correctness of the custom age composition. The new reference does not replace fixture bytes.
-- **Integrity record:** [provenance-pins.json](provenance-pins.json) records all committed fixture hashes and their pre-repair lab commit. `npm run check:provenance` verifies local fixture existence and hashes; `npm run check:provenance -- --fetch-reference` additionally fetches the numbered comparison reference and checks its hash. The original fixture-tooling upstream revision remains unknown.
+- **Active specification:** [draft-irtf-cfrg-bbs-signatures-12](https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-12.txt), published 28 September 2026, SHA-256 `9f2123df0f33ee8c5ffa75efb746f71e24eafd2e895ab8ba3245eaf6bc5be409`. This is a work-in-progress Internet-Draft, not a final RFC. The source review covers the SHA-256 ciphersuite, key generation, message mapping, generator derivation, domain/challenge calculation, signing, verification, proof generation/verification and encoding checks. See the [review and evidence matrix](bbs-baseline-review.md).
+- **Active publisher snapshot:** [decentralized-identity/bbs-signature at 79ad844c7b9d960266095e347bb7cdadf1542809](https://github.com/decentralized-identity/bbs-signature/tree/79ad844c7b9d960266095e347bb7cdadf1542809), the commit titled "Updates for draft 12". All 30 local SHA-256 fixture files match that snapshot **byte for byte**. This commit is newly selected for validation, not claimed to be the original July download revision.
+- **Integrity record:** [provenance-pins.json](provenance-pins.json) records the numbered draft hash, immutable upstream commit, five publisher source/tooling/license hashes, exact upstream paths and all 30 fixture hashes. `npm run check:provenance` checks the complete inventory, immutable metadata and local bytes. `npm run check:provenance -- --fetch-reference --fetch-upstream` additionally retrieves and hashes the numbered draft and all 35 publisher artifacts. Those remote checks were executed when establishing this baseline.
 - **Ciphersuite:** `BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_` (BLS12-381-SHA-256),
   `api_id = ciphersuite_id ‖ "H2G_HM2S_"`, `expand_len = 48`,
   octet_scalar_length = 32, octet_point_length = 48.
@@ -16,12 +19,17 @@ claims rest on.
   operations directly for the sixth (the DOB integer-scalar deviation — documented in
   [design-note.md](design-note.md), the README, and the page itself).
 
-## Official test fixtures
+## Versioned publisher test fixtures
 
-- **Source:** `github.com/decentralized-identity/bbs-signature`,
-  `tooling/fixtures/fixture_data/bls12-381-sha-256/` — the fixture set published by the
-  draft's own tooling. Retrieved 2026-07-17 into `src/bbs/fixtures/` (committed, so the
-  exact bytes tested against are in this repo's history).
+- **Source:** [SHA-256 fixtures at the pinned publisher commit](https://github.com/decentralized-identity/bbs-signature/tree/79ad844c7b9d960266095e347bb7cdadf1542809/tooling/fixtures/fixture_data/bls12-381-sha-256).
+  The draft's publisher distributes these values alongside its document-population
+  tooling. The tooling inserts existing vector values into the document; it is
+  not claimed here to regenerate their cryptographic outputs. This lab computes
+  those outputs independently using its own BBS code and noble curve primitives.
+  Existing local fixture bytes are retained unchanged.
+- **License:** the publisher's Apache-2.0 license is retained in
+  [BBS-FIXTURES-LICENSE.txt](BBS-FIXTURES-LICENSE.txt). The lab's own code remains
+  under its repository license.
 - **Files and what they pin:**
 
   | Fixture | Pins |
@@ -59,8 +67,18 @@ demo, not production crypto."
 
 ## Regenerating / re-verifying fixtures
 
-The fixtures are plain JSON committed under `src/bbs/fixtures/`. To re-verify them
-against upstream, recover and identify the original upstream revision before claiming a version-specific upstream match; to extend
-coverage (e.g. more message counts), the upstream `tooling/` directory contains the
-draft's fixture generator. `npm test` runs every fixture in the table on every commit
-(and CI blocks deploy on it).
+The fixtures are plain JSON committed under `src/bbs/fixtures/`. The remote check
+above verifies their exact match to the newly pinned upstream snapshot. `npm test`
+runs every fixture in the table, intermediate-trace assertions, input-boundary
+controls and existing credential/age-proof adversarial tests; CI gates deployment.
+Do not update expected outputs from the local implementation to make a test pass.
+For a future draft upgrade, select a new numbered reference and upstream commit,
+review differences and validate their publisher vectors before changing this pin.
+
+## Brief historical note
+
+The earlier editor snapshot and original fixture-download revision were not
+established. The prior provenance record and all original fixture bytes are
+preserved at [de715f85a46ceb98b7cbbf013c451e193da78e07](https://github.com/systemslibrarian/crypto-lab-credential-veil/tree/de715f85a46ceb98b7cbbf013c451e193da78e07).
+The new baseline establishes the current source and validation evidence without
+rewriting that history.
