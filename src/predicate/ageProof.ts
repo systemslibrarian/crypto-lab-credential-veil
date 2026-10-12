@@ -36,7 +36,7 @@ import {
   r,
   type SerializableElement,
 } from '../bbs/ciphersuite'
-import { bls12_381 } from '@noble/curves/bls12-381'
+import { bls12_381 } from '@noble/curves/bls12-381.js'
 import { createGenerators } from '../bbs/generators'
 import {
   octetsToProof,
@@ -286,7 +286,7 @@ export function verifyAge(issuerPk: Uint8Array, proof: AgeProof, cutoff: number,
       parsed.Abar,
       W,
       parsed.Bbar,
-      bls12_381.G2.ProjectivePoint.BASE.negate(),
+      bls12_381.G2.Point.BASE.negate(),
     )
     const ok = bbsChallengeOk && pairingOk && bitsOk
     return {

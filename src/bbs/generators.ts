@@ -2,7 +2,7 @@
  * create_generators (draft §Generators Calculation) for BLS12-381-SHA-256.
  * Deterministic: seeded expand_message_xmd chain, each state hashed to G1.
  */
-import { bls12_381 } from '@noble/curves/bls12-381'
+import { bls12_381 } from '@noble/curves/bls12-381.js'
 import {
   API_ID,
   CIPHERSUITE_ID,

@@ -3,7 +3,7 @@
  * Hand-rolled to the draft's pseudocode; validated against the official
  * fixture KATs in ./fixtures.
  */
-import { bls12_381 } from '@noble/curves/bls12-381'
+import { bls12_381 } from '@noble/curves/bls12-381.js'
 import {
   API_ID,
   CIPHERSUITE_ID,
@@ -50,7 +50,7 @@ export function keyGen(keyMaterial: Uint8Array, keyInfo: Uint8Array = new Uint8A
 
 /** SkToPk: W = SK * BP2, compressed (96 bytes). */
 export function skToPk(sk: bigint): Uint8Array {
-  return pointToOctetsG2(bls12_381.G2.ProjectivePoint.BASE.multiply(modR(sk)))
+  return pointToOctetsG2(bls12_381.G2.Point.BASE.multiply(modR(sk)))
 }
 
 export function randomKeyMaterial(): Uint8Array {
@@ -154,7 +154,7 @@ export function octetsToSignature(signature: Uint8Array): { A: G1Point; e: bigin
 
 export function octetsToPubkey(pk: Uint8Array): G2Point {
   const W = octetsToPointG2(pk)
-  if (W.equals(bls12_381.G2.ProjectivePoint.ZERO)) throw new Error('public key is identity')
+  if (W.equals(bls12_381.G2.Point.ZERO)) throw new Error('public key is identity')
   return W
 }
 
@@ -174,7 +174,7 @@ export function coreVerify(
     const domain = calculateDomain(pk, generators[0], generators.slice(1), header, apiId)
     const B = computeB(domain, generators, messages)
     // h(A, W) * h(A*e - B, BP2) == Identity_GT
-    return pairingProductIsIdentity(A, W, mul(A, e).subtract(B), bls12_381.G2.ProjectivePoint.BASE)
+    return pairingProductIsIdentity(A, W, mul(A, e).subtract(B), bls12_381.G2.Point.BASE)
   } catch {
     return false
   }
@@ -400,7 +400,7 @@ export function coreProofVerify(
     const challenge = proofChallenge(initRes, disclosedMessages, disclosedIndexes, ph, apiId)
     if (challenge !== proof.challenge) return false
     // h(Abar, W) * h(Bbar, -BP2) == Identity_GT
-    return pairingProductIsIdentity(proof.Abar, W, proof.Bbar, bls12_381.G2.ProjectivePoint.BASE.negate())
+    return pairingProductIsIdentity(proof.Abar, W, proof.Bbar, bls12_381.G2.Point.BASE.negate())
   } catch {
     return false
   }
