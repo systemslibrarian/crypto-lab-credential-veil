@@ -5,7 +5,7 @@
  * Not a CI gate (numbers are hardware-dependent and would flake); the point
  * is that anyone can regenerate the published table with one command.
  */
-import { bench, describe } from 'vitest'
+import { describe, test } from 'vitest'
 import {
   cutoffDays,
   issueBbs,
@@ -38,14 +38,28 @@ const FAST = { warmupIterations: 2, iterations: 10 }
 const SLOW = { warmupIterations: 1, iterations: 3 }
 
 describe('BBS core (6-message credential)', () => {
-  bench('sign', () => void issueBbs(issuer, FIELDS), FAST)
-  bench('present — reveal 1 of 6', () => void present(cred, ['class'], PH), FAST)
-  bench('present — reveal all 6', () => void present(cred, [...(Object.keys(FIELDS) as (keyof CredentialFields)[])], PH), FAST)
-  bench('verify presentation — 1 of 6', () => void verifyPresentation(issuer.pk, pres1), FAST)
-  bench('verify presentation — all 6', () => void verifyPresentation(issuer.pk, presAll), FAST)
+  test('sign', async ({ bench }) => {
+    await bench('sign', () => void issueBbs(issuer, FIELDS)).run(FAST)
+  })
+  test('present — reveal 1 of 6', async ({ bench }) => {
+    await bench('present — reveal 1 of 6', () => void present(cred, ['class'], PH)).run(FAST)
+  })
+  test('present — reveal all 6', async ({ bench }) => {
+    await bench('present — reveal all 6', () => void present(cred, [...(Object.keys(FIELDS) as (keyof CredentialFields)[])], PH)).run(FAST)
+  })
+  test('verify presentation — 1 of 6', async ({ bench }) => {
+    await bench('verify presentation — 1 of 6', () => void verifyPresentation(issuer.pk, pres1)).run(FAST)
+  })
+  test('verify presentation — all 6', async ({ bench }) => {
+    await bench('verify presentation — all 6', () => void verifyPresentation(issuer.pk, presAll)).run(FAST)
+  })
 })
 
 describe('age predicate (15-bit range proof, linked)', () => {
-  bench('prove age ≥ 18', () => void proveAge(cred, CUTOFF), SLOW)
-  bench('verify age proof', () => void verifyAge(issuer.pk, ageProof, CUTOFF), SLOW)
+  test('prove age ≥ 18', async ({ bench }) => {
+    await bench('prove age ≥ 18', () => void proveAge(cred, CUTOFF)).run(SLOW)
+  })
+  test('verify age proof', async ({ bench }) => {
+    await bench('verify age proof', () => void verifyAge(issuer.pk, ageProof, CUTOFF)).run(SLOW)
+  })
 })
