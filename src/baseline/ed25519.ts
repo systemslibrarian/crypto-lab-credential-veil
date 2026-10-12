@@ -4,7 +4,7 @@
  * holder must hand over ALL fields plus the signature — and that signature is
  * a stable byte string, identical on every presentation.
  */
-import { ed25519 } from '@noble/curves/ed25519'
+import { ed25519 } from '@noble/curves/ed25519.js'
 import { ascii } from '../bbs/ciphersuite'
 import type { CredentialFields } from '../credential/credential'
 
@@ -40,5 +40,5 @@ export function verifyEd25519(payload: Uint8Array, signature: Uint8Array, public
 }
 
 export function randomEd25519SecretKey(): Uint8Array {
-  return ed25519.utils.randomPrivateKey()
+  return ed25519.utils.randomSecretKey()
 }

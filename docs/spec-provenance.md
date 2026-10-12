@@ -45,8 +45,8 @@ claims rest on.
 
 | Package | Version | Supplies | Explicitly NOT supplied by it |
 |---|---|---|---|
-| `@noble/curves` | 1.9.7 | BLS12-381 G1/G2 arithmetic, pairings (`pairingBatch`), `hash_to_curve`, `expand_message_xmd`; Ed25519 for the baseline | Anything BBS: generators, domain calculation, sign/verify, proof gen/verify — all hand-rolled in `src/bbs/` |
-| `@noble/hashes` | 1.8.0 | SHA-256 | — |
+| `@noble/curves` | 2.4.0 | BLS12-381 G1/G2 arithmetic, pairings (`pairingBatch`), `hash_to_curve`, `expand_message_xmd`; Ed25519 for the baseline | Anything BBS: generators, domain calculation, sign/verify, proof gen/verify — all hand-rolled in `src/bbs/` |
+| `@noble/hashes` | 2.4.0 | SHA-256 | — |
 
 Exact versions are pinned by `package-lock.json`; CI installs with `npm ci`.
 

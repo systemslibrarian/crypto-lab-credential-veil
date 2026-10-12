@@ -58,9 +58,11 @@ npm ci
 npm run dev        # local dev server
 npm test           # unit tests incl. official spec KATs + adversarial suite
 npm run build      # typecheck + production build
-npm run test:a11y  # axe WCAG 2.1 A/AA gate — Chromium/Firefox/WebKit/mobile, both themes (port 4620)
+npm run test:a11y  # axe WCAG 2.1 A/AA gate — Chromium/Firefox/WebKit/mobile, dark theme (port 4620)
 npm run bench      # reproducible performance numbers (see docs/benchmarks.md)
 ```
+
+Requires Node 20.19+; CI uses Node 22.
 
 ## Related Demos
 
@@ -71,14 +73,15 @@ npm run bench      # reproducible performance numbers (see docs/benchmarks.md)
 
 ## Build & Verify
 
-- **79 unit tests** (Vitest), colocated in `src/`, all executed in CI before deploy —
+- **88 unit tests** (Vitest), colocated in `src/`, executed by the CI gate before deploy —
   including a property-based/adversarial suite (`src/credential/adversarial.test.ts`)
   that byte-flips, truncates, and re-targets valid proofs and requires every mutation to
   fail closed.
+- Six primitive compatibility controls cover BLS pairing cancellation and identity rejection, point encoding/scalar boundaries, and actual Ed25519 baseline signatures checked independently with native WebCrypto.
 - **25 official spec KATs** from the draft-irtf-cfrg-bbs-signatures fixtures (BLS12-381-SHA-256): 10 signature, 15 proof — plus keypair, hash-to-scalar, 10 message-to-scalar cases, the full generator set (P1, Q1, H1–H10), and the mocked-RNG vectors, in `src/bbs/fixtures/`.
-- **Accessibility gate:** `@axe-core/playwright` scans the production build in **both themes** after driving every exhibit to its post-interaction state; zero WCAG 2.1 A/AA violations required for deploy (`.github/workflows/deploy.yml`).
+- **Accessibility gate:** `@axe-core/playwright` scans the production build in the configured **dark theme** at 1280px and 380px after driving every exhibit to its post-interaction state; zero WCAG 2.1 A/AA violations required for deploy (`.github/workflows/deploy.yml`). Light-theme verification is not established by this gate.
 - **Browser matrix:** the a11y/interaction drive runs on Chromium, Firefox, WebKit, and
-  a mobile (Pixel-7-sized) viewport — four projects, both themes, serialized because
+  a mobile (Pixel-7) project — four projects, dark-theme scans, serialized because
   parallel pairing math can starve a browser renderer.
 
 ## Reviewing the cryptography

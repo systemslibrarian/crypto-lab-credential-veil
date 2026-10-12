@@ -10,9 +10,9 @@
  * generation and verification) is hand-rolled below to the draft's pseudocode
  * and verified against the official fixture KATs.
  */
-import { bls12_381 } from '@noble/curves/bls12-381'
-import { expand_message_xmd } from '@noble/curves/abstract/hash-to-curve'
-import { sha256 } from '@noble/hashes/sha256'
+import { bls12_381 } from '@noble/curves/bls12-381.js'
+import { expand_message_xmd } from '@noble/curves/abstract/hash-to-curve.js'
+import { sha256 } from '@noble/hashes/sha2.js'
 
 export const CIPHERSUITE_ID = 'BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_'
 export const API_ID = CIPHERSUITE_ID + 'H2G_HM2S_'
@@ -22,11 +22,11 @@ export const OCTET_POINT_LENGTH = 48
 
 export const r = bls12_381.fields.Fr.ORDER
 
-export type G1Point = InstanceType<typeof bls12_381.G1.ProjectivePoint>
-export type G2Point = InstanceType<typeof bls12_381.G2.ProjectivePoint>
+export type G1Point = InstanceType<typeof bls12_381.G1.Point>
+export type G2Point = InstanceType<typeof bls12_381.G2.Point>
 
-export const G1 = bls12_381.G1.ProjectivePoint
-export const G2 = bls12_381.G2.ProjectivePoint
+export const G1 = bls12_381.G1.Point
+export const G2 = bls12_381.G2.Point
 
 const te = new TextEncoder()
 
@@ -97,11 +97,11 @@ export function hashToScalar(msg: Uint8Array, dst: Uint8Array): bigint {
 }
 
 export function pointToOctetsG1(p: G1Point): Uint8Array {
-  return p.toRawBytes(true)
+  return p.toBytes(true)
 }
 
 export function pointToOctetsG2(p: G2Point): Uint8Array {
-  return p.toRawBytes(true)
+  return p.toBytes(true)
 }
 
 /** octets_to_point_E1 + subgroup check; INVALID → throws. */
