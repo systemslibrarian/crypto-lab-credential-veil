@@ -5,12 +5,9 @@ claims rest on.
 
 ## Specification
 
-- **Document:** *The BBS Signature Scheme*, `draft-irtf-cfrg-bbs-signatures` (CFRG,
-  Looker / Kalos / Whitehead / Lodder). The working copy this implementation was written
-  against is committed verbatim at [`spec-notes/draft-irtf-cfrg-bbs-signatures.md`](../spec-notes/draft-irtf-cfrg-bbs-signatures.md)
-  (the upstream `-latest` editor's draft as committed here on 2026-07-17); that file —
-  not a memory of the draft — is the source of truth for the pseudocode this repo
-  hand-rolls.
+- **Historical implementation reference:** earlier documentation claimed a verbatim July 17, 2026 editor-draft snapshot existed at `spec-notes/draft-irtf-cfrg-bbs-signatures.md`. That file is absent, including from the available repository history checked on 12 October 2026. Its exact original upstream revision is **not established**; the claim of a committed snapshot has been removed rather than inventing one.
+- **Versioned comparison reference:** [draft-irtf-cfrg-bbs-signatures-12](https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-12.txt), published 28 September 2026, SHA-256 `9f2123df0f33ee8c5ffa75efb746f71e24eafd2e895ab8ba3245eaf6bc5be409`. This is a work-in-progress Internet-Draft, not a final RFC. Its CoreSign deterministic scalar derivation was reviewed against `src/bbs/bbs.ts`; this limited comparison and existing KATs **do not establish complete draft-12 conformance**, historical source provenance or correctness of the custom age composition. The new reference does not replace fixture bytes.
+- **Integrity record:** [provenance-pins.json](provenance-pins.json) records all committed fixture hashes and their pre-repair lab commit. `npm run check:provenance` verifies local fixture existence and hashes; `npm run check:provenance -- --fetch-reference` additionally fetches the numbered comparison reference and checks its hash. The original fixture-tooling upstream revision remains unknown.
 - **Ciphersuite:** `BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_` (BLS12-381-SHA-256),
   `api_id = ciphersuite_id ‖ "H2G_HM2S_"`, `expand_len = 48`,
   octet_scalar_length = 32, octet_point_length = 48.
@@ -63,7 +60,7 @@ demo, not production crypto."
 ## Regenerating / re-verifying fixtures
 
 The fixtures are plain JSON committed under `src/bbs/fixtures/`. To re-verify them
-against upstream, fetch the same paths from the fixture repo above and diff; to extend
+against upstream, recover and identify the original upstream revision before claiming a version-specific upstream match; to extend
 coverage (e.g. more message counts), the upstream `tooling/` directory contains the
 draft's fixture generator. `npm test` runs every fixture in the table on every commit
 (and CI blocks deploy on it).

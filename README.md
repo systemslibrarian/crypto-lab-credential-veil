@@ -4,7 +4,7 @@ Anonymous credentials with **BBS selective disclosure** over BLS12-381, in the b
 
 ## What It Is
 
-A signed credential (a JWT, a mobile driver's license) is an **all-or-nothing artifact**: to prove one field, you hand over the whole document plus the signature that binds it — and that signature is a stable byte string that links every place you show it. BBS signatures (Boneh–Boyen–Shacham lineage, modernized by Camenisch–Drijvers–Lehmann, standardized in **draft-irtf-cfrg-bbs-signatures**) break that: the issuer signs N messages once; the holder proves knowledge of that signature while revealing only the k messages they choose, in a freshly randomized presentation each time.
+A signed credential (a JWT, a mobile driver's license) is an **all-or-nothing artifact**: to prove one field, you hand over the whole document plus the signature that binds it — and that signature is a stable byte string that links every place you show it. BBS signatures (Boneh–Boyen–Shacham lineage, modernized by Camenisch–Drijvers–Lehmann, specified in the evolving **CFRG BBS Internet-Draft**) break that: the issuer signs N messages once; the holder proves knowledge of that signature while revealing only the k messages they choose, in a freshly randomized presentation each time.
 
 **On the name:** this lab implements the CFRG draft's scheme, which the draft calls plain **BBS** — its signature is the pair `(A, e)`. **BBS+** is a distinct scheme: the Au–Susilo–Mu variant (*Constant-Size Dynamic k-TAA*, SCN 2006), whose signature carries an extra blinding scalar, `(A, e, s)`. The two are often conflated; this repo means the former throughout.
 
@@ -109,3 +109,11 @@ precomputed or faked to hide the cost.
 *Part of the [Crypto Lab](https://crypto-lab.systemslibrarian.dev/) suite.*
 
 *"So whether you eat or drink or whatever you do, do it all for the glory of God." — 1 Corinthians 10:31*
+
+## Issuance, presentation and research assumptions (12 October 2026)
+
+[On the Concrete Security of BBS/BBS+ Signatures](https://eprint.iacr.org/2025/1093), received 11 June 2025, revised 22 October 2025 (ASIACRYPT 2025), gives q-signature key-recovery attacks comparable to Θ(q)-DL, about O(sqrt(p/q)) for suitable q. Here q concerns issuer-signature exposure, not the number of randomized credential presentations. [Tight Security for BBS Signatures](https://eprint.iacr.org/2025/1973), received 22 October 2025, revised 20 February 2026 (EUROCRYPT 2026), gives a tight q-SDH reduction for once-per-message issuance, covering deterministic signing; its multiple-randomized-signatures-on-one-message result is an algebraic proof-tightness limitation, not an exploit.
+
+This lab derives CoreSign’s e deterministically from the signing key, signed tuple and domain. Repeating the same issuance yields the same signature artifact; changing a signed field or header changes its context. Presenting the existing credential generates fresh proof randomness without issuing a new signature. The live three-presentation exhibit demonstrates that distinction. These theorems do not prove this custom DOB/age composition or browser side-channel safety.
+
+The claimed historical editor-draft archive was missing and could not be recovered from available repository history. [Spec provenance](docs/spec-provenance.md) now states that gap, pins a numbered draft-12 comparison reference and content hash, and checks all existing fixture hashes. It does not claim the new reference was the original implementation source or full draft-12 conformance.

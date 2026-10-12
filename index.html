@@ -276,6 +276,13 @@
           <button id="unlink-ed" type="button" disabled>Present 3× with Ed25519</button>
         </div>
         <div id="unlink-out" class="exhibit-out"></div>
+        <details>
+          <summary>Issuing a signature is different from showing it</summary>
+          <p>CoreSign here is deterministic for a fixed key, signed tuple and header/domain. Issuing a changed tuple creates a new artifact; repeating the same issuance reproduces the same signature. The buttons above rerandomize proof presentations of one already-issued credential, without contacting the issuer.</p>
+          <p><a href="https://eprint.iacr.org/2025/1093" target="_blank" rel="noreferrer">Concrete BBS security (ASIACRYPT 2025; revised 22 October 2025)</a> gives q-dependent issuer-key recovery costs: q describes signature exposure, not presentation count. <a href="https://eprint.iacr.org/2025/1973" target="_blank" rel="noreferrer">Tight BBS security (EUROCRYPT 2026; revised 20 February 2026)</a> distinguishes deterministic / once-per-message issuance from multiple randomized signatures of one message. Its proof-tightness limitation is not an exploit.</p>
+          <p>The current <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-12" target="_blank" rel="noreferrer">draft-12 (28 September 2026)</a> remains work in progress. Our claimed historical editor snapshot was unavailable; fixture integrity and a numbered comparison reference are recorded in the repository’s spec provenance. These results do not validate this lab’s custom age proof or browser side channels.</p>
+        </details>
+
       </section>
 
       <section class="panel" aria-labelledby="age-h">

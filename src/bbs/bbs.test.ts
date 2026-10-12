@@ -159,6 +159,20 @@ describe('round trips and fail-closed behavior', () => {
   )
   const signature = sign(sk, pk, header, messages)
 
+  it('repeat deterministic issuance is identical while changed message/header changes the signature context', () => {
+    expect(bytesToHex(sign(sk, pk, header, messages))).toBe(bytesToHex(signature))
+    const changed = [...messages]; changed[0] = ascii('name:Another')
+    const newSignature = sign(sk, pk, header, changed)
+    expect(bytesToHex(newSignature)).not.toBe(bytesToHex(signature))
+    expect(verify(pk, newSignature, header, changed)).toBe(true)
+    expect(verify(pk, newSignature, header, messages)).toBe(false)
+    const newHeader = ascii('another-header')
+    const headerSignature = sign(sk, pk, newHeader, messages)
+    expect(bytesToHex(headerSignature)).not.toBe(bytesToHex(signature))
+    expect(verify(pk, headerSignature, newHeader, messages)).toBe(true)
+    expect(verify(pk, headerSignature, header, messages)).toBe(false)
+  })
+
   it('signs and verifies a 6-message credential', () => {
     expect(verify(pk, signature, header, messages)).toBe(true)
   })

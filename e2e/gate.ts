@@ -587,7 +587,7 @@ export async function driveAllStates(
 
   // ---- 9. every disclosure, opened by clicking its own summary -------------
   const summaries = await page.locator('details > summary').all();
-  expect(summaries.length, 'the page must still carry its disclosures').toBe(2);
+  expect(summaries.length, 'the page must still carry its disclosures').toBe(3);
   for (const [i, summary] of summaries.entries()) {
     await summary.click();
     await expect(page.locator('details').nth(i)).toHaveAttribute('open', '');

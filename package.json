@@ -7,9 +7,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "npm run check:provenance && vitest run",
     "test:a11y": "playwright test",
-    "bench": "vitest bench --run"
+    "bench": "vitest bench --run",
+    "check:provenance": "node scripts/check-provenance.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

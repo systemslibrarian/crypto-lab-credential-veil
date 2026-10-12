@@ -182,3 +182,7 @@ Stated here once, plainly. These are why the README says "not production crypto.
    serialization order in `challengeExtras` matches between prover and verifier, check
    the `T3`/`T_Δ` recomputations, check the OR-proof branch simulation.
 6. `docs/threat-model.md` — what none of the above protects.
+
+## Issuance-sensitive assumptions
+
+[ASIACRYPT 2025 concrete-security analysis](https://eprint.iacr.org/2025/1093) treats q as signature exposure under an issuer key, not the number of holder presentations. Its q-dependent key-recovery cost is not ordinary DL intuition. [EUROCRYPT 2026 tight-security analysis](https://eprint.iacr.org/2025/1973) supplies a positive q-SDH reduction for once-per-message issuance (including deterministic signing) and a distinct algebraic-reduction limitation for multiple randomized signatures of one message. That negative proof result is not an exploitation claim. Repeating this lab’s deterministic issuance creates the same artifact; rerandomizing a proof of possession does not create a new issuer signature. Neither research theorem validates the custom integer-DOB encoding, predicate composition, side channels or deployment privacy.
