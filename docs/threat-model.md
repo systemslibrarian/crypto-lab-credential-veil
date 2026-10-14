@@ -40,7 +40,7 @@ math running on this page, assuming an honest browser, honest page code, and wor
 The proof-value guarantee is clarified in [BBS draft-13 §3.3.7 and §5 (13 October 2026)](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-13#section-3.3.7).
 It compares credentials satisfying the same disclosed statement, even when the
 adversary issued both. This is a draft clarification, not a new attack. The
-implementation remains checked against draft-12; these statements do not establish
+implementation remains checked against draft-13; these statements do not establish
 security of the custom age-proof composition or of a production deployment.
 
 ## What it does NOT protect (out of scope, on purpose)

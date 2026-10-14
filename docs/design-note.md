@@ -31,7 +31,7 @@ supplies only BLS12-381 group arithmetic, pairings, and `expand_message_xmd` /
 official fixture outputs (see [spec-provenance.md](spec-provenance.md)).
 
 The current numbered reference and publisher snapshot are recorded in the
-[draft-12 baseline review](bbs-baseline-review.md). Its source/encoding review
+[draft-13 baseline review](bbs-baseline-review.md). Its source/encoding review
 and known-answer checks cover the SHA-256 BBS core. The custom DOB mapping and
 age-predicate transcript below retain their separate teaching scope.
 
@@ -46,7 +46,7 @@ and disclosed pairs `{(i, m_i) : i ∈ R}`:
 > the disclosed indexes `R` are exactly the disclosed scalars, and I know the values of
 > the undisclosed messages."
 
-This is the draft's CoreProofGen/CoreProofVerify, unmodified (the `extra` hook is empty
+This implements the draft's CoreProofGen/CoreProofVerify equations with the helper argument layout documented in the baseline review (the `extra` hook is empty
 for plain presentations, which makes the challenge input byte-identical to the draft's
 ProofChallengeCalculate — verified by the proof KATs). Fresh random scalars
 `(r1, r2, ẽ, r̃1, r̃3, m̃_j)` re-randomize the signature point as `Ā = A·(r1·r2)`;
@@ -55,7 +55,7 @@ argument for the full presentation protocol, not on whether sampled bytes differ
 [Draft-13 §3.3.7 (13 October 2026)](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-13#section-3.3.7)
 clarifies that this proof-value guarantee includes issuer–verifier coalitions,
 while accompanying identifying values remain outside it. Exhibit 3 illustrates
-randomization only. Our checked baseline remains draft-12, and this standard
+randomization only. Our checked baseline remains draft-13, and this standard
 argument does not validate Statement 2's custom composition.
 
 **Verifier inputs.** Only: proof octets, disclosed `(index, field-value)` pairs, issuer

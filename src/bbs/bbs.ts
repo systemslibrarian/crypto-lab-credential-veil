@@ -1,6 +1,7 @@
 /**
- * BBS signatures (draft-irtf-cfrg-bbs-signatures-12), BLS12-381-SHA-256 suite.
- * Hand-rolled to the draft's pseudocode; validated against the official
+ * BBS signatures (draft-irtf-cfrg-bbs-signatures-13), BLS12-381-SHA-256 suite.
+ * Implements the draft equations using separately passed helper arguments
+ * (see docs/bbs-baseline-review.md); validated against the official
  * fixture KATs in ./fixtures.
  */
 import { bls12_381 } from '@noble/curves/bls12-381.js'
@@ -42,7 +43,7 @@ function assertScalars(values: bigint[], label: string): void {
   for (const value of values) assertScalar(value, label)
 }
 
-/** Draft-12 arrays are sets of integer indexes in strictly ascending order. */
+/** Draft-13 arrays are sets of integer indexes in strictly ascending order. */
 function assertIndexes(indexes: number[], total: number, label: string): void {
   let previous = -1
   for (const index of indexes) {
@@ -130,6 +131,8 @@ export function calculateDomain(
   header: Uint8Array,
   apiId: string,
 ): bigint {
+  // Draft-13 §4.2.3 aborts when L == 0. Empty disclosures remain valid.
+  if (hPoints.length === 0) throw new Error('domain requires at least one signed message')
   const domElems: SerializableElement[] = [{ t: 'int', v: hPoints.length }, { t: 'g1', v: q1 }]
   for (const h of hPoints) domElems.push({ t: 'g1', v: h })
   const domOcts = concat(serialize(domElems), ascii(apiId))
@@ -318,7 +321,7 @@ export function proofFinalize(
     elems.push({ t: 'scalar', v: modR(mTilde[j] + m * challenge) })
   })
   elems.push({ t: 'scalar', v: challenge })
-  // §4.2.4.4: output points are nonidentity and proof scalars are nonzero.
+  // §4.2.5.4: output points are nonidentity and proof scalars are nonzero.
   // A rare degenerate RNG/transcript must abort, not produce rejected octets.
   for (const elem of elems) {
     if (elem.t === 'scalar') assertScalar(elem.v, 'proof scalar', true)

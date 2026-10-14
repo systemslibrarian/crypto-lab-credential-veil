@@ -1,28 +1,28 @@
 {
   "schemaVersion": 2,
-  "recordedAt": "2026-10-12",
-  "baselineId": "draft-12-sha256-20261012",
+  "recordedAt": "2026-10-14",
+  "baselineId": "draft-13-sha256-20261014",
   "reference": {
-    "version": "draft-irtf-cfrg-bbs-signatures-12",
-    "published": "2026-09-28",
+    "version": "draft-irtf-cfrg-bbs-signatures-13",
+    "published": "2026-10-13",
     "status": "Active Internet-Draft, work in progress",
     "role": "active implementation validation baseline for the declared SHA-256 BBS scope; not a final RFC",
-    "url": "https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-12.txt",
-    "sha256": "9f2123df0f33ee8c5ffa75efb746f71e24eafd2e895ab8ba3245eaf6bc5be409"
+    "url": "https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-13.txt",
+    "sha256": "78b71f9a4bcdf57fbce694b015ed22bcf5b71ff5263b8f8d57ae2bbcf6514cd2"
   },
   "upstream": {
     "repository": "decentralized-identity/bbs-signature",
-    "commit": "79ad844c7b9d960266095e347bb7cdadf1542809",
-    "selection": "Updates for draft 12 commit; newly selected validation baseline, not asserted as the original download revision",
+    "commit": "104bdcd85869ac05d1c621e064222441404e019b",
+    "selection": "Publisher snapshot including the domain-length and multi-exponentiation corrections present in numbered draft-13; all 30 SHA-256 fixtures match unchanged.",
     "fixtureBasePath": "tooling/fixtures/fixture_data/bls12-381-sha-256",
     "artifacts": [
       {
         "path": "draft-irtf-cfrg-bbs-signatures.md",
-        "sha256": "8a89fababf904d8cdc2c34475ee9143268e8d9cba07dcf600cae4d66667e8353"
+        "sha256": "d387aa6442b2594ae20574153db3b273ff8e92c51c5d599cc6a0fec293a05aad"
       },
       {
         "path": "tooling/fixtures/index.ts",
-        "sha256": "ca6ef928605c22bdedd6fc6ca2cc9cdd513ade359e6a0dc36125c12468b4a93b"
+        "sha256": "b78f1daea03557fdbc57ef5b942ffc034cb5f248e906f8df295d0ff234bcc7aa"
       },
       {
         "path": "tooling/fixtures/fetchFixtures.ts",
@@ -41,7 +41,9 @@
   "historical": {
     "previousLabCommit": "de715f85a46ceb98b7cbbf013c451e193da78e07",
     "originalSourceRevision": "unknown",
-    "preservation": "All 30 prior fixture byte sequences remain unchanged; previous provenance is retained in Git history."
+    "preservation": "All 30 prior fixture byte sequences remain unchanged; previous provenance is retained in Git history.",
+    "previousBaselineId": "draft-12-sha256-20261012",
+    "previousBaselineCommit": "51e6c70b5d44cf01d7d75d7b63034f5f71b5cf90"
   },
   "scope": {
     "suite": "BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_",

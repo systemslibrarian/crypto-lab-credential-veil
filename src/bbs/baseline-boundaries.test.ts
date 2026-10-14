@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { API_ID, G1, G2, ascii, bytesToHex, hexToBytes, i2osp, pointToOctetsG1, pointToOctetsG2, r } from './ciphersuite'
 import { createGenerators, interfaceGenerators } from './generators'
-import { calculateRandomScalars, coreSign, coreVerify, keyGen, octetsToProof, octetsToSignature, proofGen, proofVerify, seededRandomScalars, sign, skToPk, verify } from './bbs'
+import { calculateDomain, calculateRandomScalars, coreSign, coreVerify, keyGen, octetsToProof, octetsToSignature, proofGen, proofVerify, seededRandomScalars, sign, skToPk, verify } from './bbs'
 
 const sk = keyGen(ascii('draft-12-baseline-boundary-key-material'))
 const pk = skToPk(sk), header = ascii('baseline-header'), ph = ascii('verifier-challenge')
 const messages = [ascii('first'), ascii('second'), new Uint8Array()]
 const signature = sign(sk, pk, header, messages)
 
-describe('draft-12 input and transcript boundaries', () => {
+describe('draft-13 input and transcript boundaries', () => {
   it('rejects out-of-domain secret keys rather than accepting modulo-r aliases', () => {
     for (const bad of [0n, -1n, r, r + 1n]) {
       expect(() => skToPk(bad)).toThrow()
@@ -28,17 +28,33 @@ describe('draft-12 input and transcript boundaries', () => {
     }
   })
 
-  it('supports empty message lists and none/some/all disclosure with empty and nonempty headers', () => {
+  it('supports none/some/all disclosure and empty message values with empty and nonempty headers', () => {
     for (const h of [new Uint8Array(), header]) {
-      for (const values of [[], messages]) {
+      for (const values of [[new Uint8Array()], messages]) {
         const s = sign(sk, pk, h, values)
         expect(verify(pk, s, h, values)).toBe(true)
-        for (const indexes of values.length ? [[], [1], [0, 1, 2]] : [[]]) {
+        for (const indexes of values.length === 3 ? [[], [1], [0, 1, 2]] : [[], [0]]) {
           const proof = proofGen(pk, s, h, ph, values, indexes)
           expect(proofVerify(pk, proof, h, ph, indexes.map(i => values[i]), indexes)).toBe(true)
         }
       }
     }
+  })
+
+  it('rejects zero signed messages, including previously accepted signatures and proofs', () => {
+    // Captured from lab commit 51e6c70 before the draft-13 upgrade, with this
+    // file's fixed key/header/PH and deterministic scalars 1..5. Regression
+    // evidence only: these are NOT publisher fixtures or new expected outputs.
+    const legacySignature = hexToBytes('b59b4619e879ca7418d84ad5b6686c97ce51c2762853b686588a359671ad21152aa6c2d074683b8d427687cdc55313374d18777cfa4135f6750157c6a13e749258c8240407074a589b6572a196a0bee2')
+    const legacyProof = hexToBytes('97538a584371d8cbc06222358ac1bb48fcb65de025c549f7c0f128f57a8aa56a5564fb8109fe3aacb995e87e06a0b745a71f625e4117d5293756332ad8bed4bcd19d720c0316268514523cdd350a809234fa17e610817fc88f035c1083f7ba2ca8062db8e389672acc663d1deca3e42d017f6cc6538b9fc40a52470576653188a084af382834a10ba1eb4348043d22580392cfc6db0ff72680608233342aa5495bee5444d0b5936c0d0af1ed41a09a6c2996d4a488a9226296e5f668392ad56d36fa2bf0f5be8724f140295f90631ea014cb6a52445491314b72fb341c956ab69b7d15f87adf439278a014afc8318f534a56d2aea0f45ae59c53e19fd07702981cc378120a3fd4da0ebfd69f6f9ce165')
+    const generators = interfaceGenerators(1)
+    expect(() => calculateDomain(pk, generators[0], [], header, API_ID)).toThrow('at least one signed message')
+    expect(() => sign(sk, pk, header, [])).toThrow('at least one signed message')
+    expect(() => coreSign(sk, pk, generators, header, [], API_ID)).toThrow('at least one signed message')
+    expect(verify(pk, legacySignature, header, [])).toBe(false)
+    expect(coreVerify(pk, legacySignature, generators, header, [], API_ID)).toBe(false)
+    expect(() => proofGen(pk, legacySignature, header, ph, [], [])).toThrow('invalid signature')
+    expect(proofVerify(pk, legacyProof, header, ph, [], [])).toBe(false)
   })
 
   it('rejects unsorted, repeated, fractional, nonfinite and out-of-range indexes', () => {

@@ -214,7 +214,7 @@
           deployment is private. Identifying disclosures, distinctive headers or issuer keys, revocation handles,
           and network metadata can still enable tracking, including by colluding issuers and verifiers.
         </p>
-          <p id="bbs-baseline">Our BBS SHA-256 baseline is checked against <a href="https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-12.txt" target="_blank" rel="noreferrer">draft-12 (28 September 2026)</a> and matching <a href="https://github.com/decentralized-identity/bbs-signature/tree/79ad844c7b9d960266095e347bb7cdadf1542809/tooling/fixtures/fixture_data/bls12-381-sha-256" target="_blank" rel="noreferrer">versioned publisher test vectors</a>. The draft remains work in progress. See the <a href="https://github.com/systemslibrarian/crypto-lab-credential-veil/blob/main/docs/bbs-baseline-review.md" target="_blank" rel="noreferrer">review and validation scope</a>. These checks do not validate this lab’s custom age proof or browser side channels.</p>
+          <p id="bbs-baseline">Our BBS SHA-256 baseline is checked against <a href="https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-13.txt" target="_blank" rel="noreferrer">draft-13 (13 October 2026)</a> and matching <a href="https://github.com/decentralized-identity/bbs-signature/tree/104bdcd85869ac05d1c621e064222441404e019b/tooling/fixtures/fixture_data/bls12-381-sha-256" target="_blank" rel="noreferrer">versioned publisher test vectors</a>. The draft remains work in progress. See the <a href="https://github.com/systemslibrarian/crypto-lab-credential-veil/blob/main/docs/bbs-baseline-review.md" target="_blank" rel="noreferrer">review and validation scope</a>. These checks do not validate this lab’s custom age proof or browser side channels.</p>
       </section>
 
       <section class="panel" aria-labelledby="setup-h">
@@ -276,8 +276,7 @@
         <p id="bbs-privacy-scope">
           <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-13#section-3.3.7" target="_blank" rel="noreferrer">BBS draft-13 §§3.3.7 and 5 (13 October 2026)</a>
           clarify that the standard proof-value guarantee covers issuer–verifier collusion. Disclosed values and
-          identifying context remain correlatable. This draft clarification does not validate the custom age proof
-          below or change this lab's verified draft-12 baseline.
+          identifying context remain correlatable. Our BBS core is checked against draft-13. These checks do not validate the custom age proof below.
         </p>
         <div class="btn-row">
           <button id="unlink-bbs" type="button" disabled>Present 3× with BBS</button>

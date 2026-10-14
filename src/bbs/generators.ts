@@ -1,5 +1,5 @@
 /**
- * create_generators (draft-12 §4.1.1) for BLS12-381-SHA-256.
+ * create_generators (draft-13 §4.1.1) for BLS12-381-SHA-256.
  * Deterministic: seeded expand_message_xmd chain, each state hashed to G1.
  */
 import { bls12_381 } from '@noble/curves/bls12-381.js'

@@ -10,8 +10,8 @@ A signed credential (a JWT, a mobile driver's license) is an **all-or-nothing ar
 
 **What's real:** the BBS implementation on this page is hand-rolled to the draft's pseudocode (ciphersuite **BLS12-381-SHA-256**) on top of `@noble/curves` for the BLS12-381 pairing arithmetic, and passes the official fixture KATs — signing, verification, proof generation and proof verification. The Ed25519 baseline, the Pedersen-commitment age range proof, and the status-list bitstring are also real and run live.
 
-**Current BBS baseline:** [draft-12, 28 September 2026](https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-12.txt),
-with all 30 fixture files matched byte for byte to [publisher commit 79ad844](https://github.com/decentralized-identity/bbs-signature/tree/79ad844c7b9d960266095e347bb7cdadf1542809).
+**Current BBS baseline:** [draft-13, 13 October 2026](https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-13.txt),
+with all 30 fixture files matched byte for byte to [publisher commit 104bdcd](https://github.com/decentralized-identity/bbs-signature/tree/104bdcd85869ac05d1c621e064222441404e019b).
 The SHA-256 BBS core is reviewed and tested against this numbered reference,
 including publisher intermediate traces and malformed-input controls.
 See the [baseline review](docs/bbs-baseline-review.md) and [source pins](docs/spec-provenance.md).
@@ -19,7 +19,7 @@ This remains a draft and does not validate the custom age-proof composition.
 
 **What's simulated:** the credential itself (issuer, wallet, fields) is a stage prop; keys are generated per session and live only in tab memory.
 
-**Privacy scope:** standard BBS protects the proof value even when the issuer and verifiers collude. That does not establish privacy for a whole deployment: identifying disclosures, distinctive headers or issuer keys, revocation handles, and network metadata can still enable tracking. [Draft-13 §§3.3.7 and 5 (13 October 2026)](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-13#section-3.3.7) clarify this boundary; this is a draft clarification, not a new attack or a change to our verified draft-12 baseline. The standard guarantee does not validate this lab's custom age-proof composition. **Not production crypto — a teaching demo.** The implementation is not constant-time and has seen no side-channel review.
+**Privacy scope:** standard BBS protects the proof value even when the issuer and verifiers collude. That does not establish privacy for a whole deployment: identifying disclosures, distinctive headers or issuer keys, revocation handles, and network metadata can still enable tracking. [Draft-13 §§3.3.7 and 5 (13 October 2026)](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-13#section-3.3.7) clarify this boundary. The declared SHA-256 BBS core is now checked against draft-13; the baseline review records the version comparison and input-domain change. The standard guarantee does not validate this lab's custom age-proof composition. **Not production crypto — a teaching demo.** The implementation is not constant-time and has seen no side-channel review.
 
 One deliberate encoding deviation, for honesty: five credential fields are mapped to scalars exactly as the draft's signatures interface does (`messages_to_scalars`); the **DOB field is signed as its integer day count** so the age range proof can do arithmetic on it. The draft's core operations take scalars directly, so this stays within the core; only that one field's message-to-scalar mapping is custom. The age proof extends the draft's Fiat–Shamir challenge with the Pedersen-link and range-proof transcript (a standard sigma-protocol AND composition) — that extension is this lab's, not the draft's.
 
@@ -53,7 +53,7 @@ One deliberate encoding deviation, for honesty: five credential fields are mappe
 
 ## Real-World Usage
 
-- **draft-irtf-cfrg-bbs-signatures-12** (CFRG) — the work-in-progress reference for this lab's declared SHA-256 BBS baseline, with versioned publisher test vectors.
+- **draft-irtf-cfrg-bbs-signatures-13** (CFRG) — the work-in-progress reference for this lab's declared SHA-256 BBS baseline, with versioned publisher test vectors.
 - **W3C Verifiable Credentials / Data Integrity BBS cryptosuites** — selective-disclosure VC presentations.
 - **ISO mDL / mdoc privacy work** and government digital-identity pilots evaluating BBS for unlinkable age/attribute proofs.
 - Lineage: CL signatures → Idemix (IBM), U-Prove (Microsoft), Hyperledger AnonCreds — the same problem, earlier algebra.
@@ -123,4 +123,4 @@ precomputed or faked to hide the cost.
 
 This lab derives CoreSign’s e deterministically from the signing key, signed tuple and domain. Repeating the same issuance yields the same signature artifact; changing a signed field or header changes its context. Presenting the existing credential generates fresh proof randomness without issuing a new signature. The live three-presentation exhibit demonstrates that distinction. These theorems do not prove this custom DOB/age composition or browser side-channel safety.
 
-The active baseline is now [draft-12-sha256-20261012](docs/spec-provenance.md): numbered draft-12 plus an immutable publisher fixture/tooling snapshot, source review and executed vector/boundary tests. Existing fixture bytes are unchanged. The original editor-draft/download revision remains unknown and is retained as a brief historical note; it is no longer the active reference.
+The active baseline is now [draft-13-sha256-20261014](docs/spec-provenance.md): numbered draft-13 plus an immutable publisher fixture/tooling snapshot, source review and executed vector/boundary tests. Existing fixture bytes are unchanged. The original editor-draft/download revision remains unknown and is retained as a brief historical note; it is no longer the active reference.
