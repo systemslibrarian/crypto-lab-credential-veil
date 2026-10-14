@@ -497,22 +497,21 @@ function wireUnlinkability(): void {
             + `Disclosed values identical across all three: ${sharedDisclosed.length}`
             + (sharedDisclosed.length ? ` (${sharedDisclosedText}).` : '.'),
         ),
-        totalCommon !== 0 || !allVerify
-          ? verdictIndicator('alarm', 'Correlatable proof bytes found — this must not happen with fresh randomness.')
-          : sharedDisclosed.length === 0
-            ? verdictIndicator(
-                'ok',
-                'UNLINKABLE — three valid showings of ONE credential, and nothing in any of them is common to the other two.',
-              )
-            : verdictIndicator(
-                'warn',
-                `PROOFS UNLINKABLE, DISCLOSURE IS NOT — the proof octets share nothing, but every showing hands the verifier ${sharedDisclosedText}. `
-                  + 'That value is the correlator, and it is there because you chose to reveal it, not because the cryptography leaked it. '
-                  + 'Two colluding verifiers can link these three showings exactly as well as the revealed value distinguishes you.',
-              ),
+        !allVerify
+          ? verdictIndicator('alarm', 'VERIFICATION FAILED — at least one generated proof was rejected.')
+          : verdictIndicator(
+              'warn',
+              (totalCommon === 0
+                ? 'NO SHARED 8-BYTE RUNS OBSERVED'
+                : 'SHARED 8-BYTE RUNS OBSERVED')
+                + ' — this byte comparison does not prove or disprove unlinkability. '
+                + (sharedDisclosed.length
+                  ? `Every showing also reveals ${sharedDisclosedText}. Those repeated values can support tracking to the extent they identify you.`
+                  : 'No disclosed field values are shared across these showings; other context may still identify you.'),
+            ),
       ]),
       statusLine(
-        'Honest caveat: BBS unlinks the cryptographic layer only. If the value you reveal identifies you (a name, a license number), no cryptography can unlink that — the line above computes exactly which values were common to all three.',
+        'Standard BBS protects the proof value even against issuer–verifier collusion. Identifying disclosures, headers, issuer keys and metadata can still enable tracking. This comparison illustrates randomization; it is not a proof of privacy.',
       ),
     )
     })

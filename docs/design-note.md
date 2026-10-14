@@ -48,10 +48,15 @@ and disclosed pairs `{(i, m_i) : i ∈ R}`:
 
 This is the draft's CoreProofGen/CoreProofVerify, unmodified (the `extra` hook is empty
 for plain presentations, which makes the challenge input byte-identical to the draft's
-ProofChallengeCalculate — verified by the proof KATs). Zero-knowledge and unlinkability
-come from the fresh random scalars `(r1, r2, ẽ, r̃1, r̃3, m̃_j)` per presentation; the
-signature point is re-randomized as `Ā = A·(r1·r2)` so no byte of the signature appears
-in any proof.
+ProofChallengeCalculate — verified by the proof KATs). Fresh random scalars
+`(r1, r2, ẽ, r̃1, r̃3, m̃_j)` re-randomize the signature point as `Ā = A·(r1·r2)`;
+the signature itself is not transmitted. Unlinkability rests on the zero-knowledge
+argument for the full presentation protocol, not on whether sampled bytes differ.
+[Draft-13 §3.3.7 (13 October 2026)](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-13#section-3.3.7)
+clarifies that this proof-value guarantee includes issuer–verifier coalitions,
+while accompanying identifying values remain outside it. Exhibit 3 illustrates
+randomization only. Our checked baseline remains draft-12, and this standard
+argument does not validate Statement 2's custom composition.
 
 **Verifier inputs.** Only: proof octets, disclosed `(index, field-value)` pairs, issuer
 public key, the two headers. The verifier recomputes disclosed scalars from the claimed
@@ -142,10 +147,10 @@ instead signed as the **integer scalar of its day count** (days since 1900-01-01
     than 89 years after the DOB would need a wider decomposition (fails closed: the
     honest prover throws `RangeError`).
 - **Privacy note:** the DOB scalar has ~15 bits of entropy instead of a full field
-  element. BBS proofs hide undisclosed messages information-theoretically (perfectly
-  hiding commitments / uniform blinding), not by entropy of the message, so this does
-  not weaken hiding — but it is exactly the kind of decision an auditor should check,
-  which is why it is called out here, in the README, in the page copy, and in the code.
+  element. Standard BBS does not require hidden messages to be high-entropy secrets,
+  but uniform blinding alone does not establish privacy of this custom linked age
+  proof. Its DOB encoding and full transcript need a separate security argument;
+  neither the standard BBS guarantee nor the byte comparison supplies one.
 
 ## Known security limitations
 

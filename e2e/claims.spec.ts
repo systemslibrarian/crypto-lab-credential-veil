@@ -356,10 +356,11 @@ test('exhibit 3 measures the overlap it claims, both ways round', async ({ page 
   expect(bbsRaw).toContain(`(Class = ${CRED_VALUES.class})`)
   const bbsVerdict = verdictOf(page, '#unlink-out')
   await expect(bbsVerdict).toHaveClass(/indicator-warn/)
-  await expect(bbsVerdict).toContainText('PROOFS UNLINKABLE, DISCLOSURE IS NOT')
+  await expect(bbsVerdict).toContainText('NO SHARED 8-BYTE RUNS OBSERVED')
+  await expect(bbsVerdict).toContainText('does not prove or disprove unlinkability')
   await expect(bbsVerdict).toContainText(`Class = ${CRED_VALUES.class}`)
   await expect(page.locator('#unlink-out .status-line')).toContainText(
-    'BBS unlinks the cryptographic layer only',
+    'Standard BBS protects the proof value even against issuer–verifier collusion',
   )
 
   // Ed25519: the same bytes, three times.

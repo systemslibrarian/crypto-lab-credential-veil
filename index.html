@@ -201,9 +201,9 @@
           to prove one field, you hand over the whole document and the signature that binds it. BBS signatures break
           that. The issuer signs the six fields <em>once</em>; the holder can then prove, as many times as they like,
           that a valid signature exists over any subset of fields they choose to reveal — without ever showing the
-          signature itself. And because each presentation is freshly randomized, the <em>proof octets</em> of two showings of
-          the same credential share nothing a verifier could correlate. The values you choose to reveal are a different
-          matter — Exhibit 3 measures both and tells you which ones came out common.
+          signature itself. Standard BBS protects the <em>proof value</em> from being used to identify which credential
+          produced it, even by colluding issuers and verifiers. Revealed values and other context can still identify
+          you. Exhibit 3 illustrates proof randomization and measures repeated disclosures; it does not prove unlinkability.
         </p>
         <p class="scope-note">
           <strong>Honest scope:</strong> this is a teaching demo, not production crypto. The BBS signatures, proofs,
@@ -211,8 +211,8 @@
           The BBS core is checked against publisher fixtures; the custom age proof has separate teaching tests.
           The credential data, issuer, and wallet are
           stage props: keys live only in this tab's memory. What this page does <em>not</em> prove: that a real
-          deployment is private — issuer collusion, network metadata, and revealing identifying values (your name is
-          your name) all sit outside what the math can protect.
+          deployment is private. Identifying disclosures, distinctive headers or issuer keys, revocation handles,
+          and network metadata can still enable tracking, including by colluding issuers and verifiers.
         </p>
           <p id="bbs-baseline">Our BBS SHA-256 baseline is checked against <a href="https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-12.txt" target="_blank" rel="noreferrer">draft-12 (28 September 2026)</a> and matching <a href="https://github.com/decentralized-identity/bbs-signature/tree/79ad844c7b9d960266095e347bb7cdadf1542809/tooling/fixtures/fixture_data/bls12-381-sha-256" target="_blank" rel="noreferrer">versioned publisher test vectors</a>. The draft remains work in progress. See the <a href="https://github.com/systemslibrarian/crypto-lab-credential-veil/blob/main/docs/bbs-baseline-review.md" target="_blank" rel="noreferrer">review and validation scope</a>. These checks do not validate this lab’s custom age proof or browser side channels.</p>
       </section>
@@ -268,10 +268,16 @@
       </section>
 
       <section class="panel" aria-labelledby="unlink-h">
-        <h2 id="unlink-h">3 · Unlinkability — present three times, correlate nothing</h2>
+        <h2 id="unlink-h">3 · Unlinkability — compare three presentations</h2>
         <p>
-          Present the same credential three times, revealing the same field. Then flip to the Ed25519 baseline. One of
-          these is a tracking cookie; the diff tells you which.
+          Present the same credential three times, revealing the same field. Compare the randomized BBS proof bytes
+          with the repeated Ed25519 signature. Different bytes illustrate randomization; they do not prove unlinkability.
+        </p>
+        <p id="bbs-privacy-scope">
+          <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-13#section-3.3.7" target="_blank" rel="noreferrer">BBS draft-13 §§3.3.7 and 5 (13 October 2026)</a>
+          clarify that the standard proof-value guarantee covers issuer–verifier collusion. Disclosed values and
+          identifying context remain correlatable. This draft clarification does not validate the custom age proof
+          below or change this lab's verified draft-12 baseline.
         </p>
         <div class="btn-row">
           <button id="unlink-bbs" type="button" disabled>Present 3× with BBS</button>
