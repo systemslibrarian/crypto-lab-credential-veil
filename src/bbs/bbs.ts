@@ -131,8 +131,8 @@ export function calculateDomain(
   header: Uint8Array,
   apiId: string,
 ): bigint {
-  // Draft-13 §4.2.3 aborts when L == 0. Empty disclosures remain valid.
-  if (hPoints.length === 0) throw new Error('domain requires at least one signed message')
+  // Draft-14 §4.2.3 permits L == 0; Q1 is still required and binds the header.
+  // An empty signed-message list differs from an empty value or no disclosures.
   const domElems: SerializableElement[] = [{ t: 'int', v: hPoints.length }, { t: 'g1', v: q1 }]
   for (const h of hPoints) domElems.push({ t: 'g1', v: h })
   const domOcts = concat(serialize(domElems), ascii(apiId))

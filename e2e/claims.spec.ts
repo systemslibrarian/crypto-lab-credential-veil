@@ -13,6 +13,12 @@ test('the current BBS baseline and its limits are visible with immutable source 
   await expect(baseline.locator('a').nth(1)).toHaveAttribute('href',
     `https://github.com/${provenance.upstream.repository}/tree/${provenance.upstream.commit}/${provenance.upstream.fixtureBasePath}`)
   expect(await baseline.evaluate(el => Boolean(el.closest('details')))).toBe(false)
+  const update = page.locator('#bbs-draft-update')
+  await expect(update).toBeVisible()
+  await expect(update).toContainText('zero signed messages')
+  await expect(update).toContainText('still binds the issuer key and header')
+  await expect(update).toContainText('not a final standard')
+  await expect(update.locator('a')).toHaveAttribute('href', 'https://datatracker.ietf.org/doc/draft-irtf-cfrg-bbs-signatures/14/')
 })
 
 /**

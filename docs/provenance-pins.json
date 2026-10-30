@@ -1,24 +1,24 @@
 {
   "schemaVersion": 2,
-  "recordedAt": "2026-10-14",
-  "baselineId": "draft-13-sha256-20261014",
+  "recordedAt": "2026-10-30",
+  "baselineId": "draft-14-sha256-20261030",
   "reference": {
-    "version": "draft-irtf-cfrg-bbs-signatures-13",
-    "published": "2026-10-13",
+    "version": "draft-irtf-cfrg-bbs-signatures-14",
+    "published": "2026-10-29",
     "status": "Active Internet-Draft, work in progress",
     "role": "active implementation validation baseline for the declared SHA-256 BBS scope; not a final RFC",
-    "url": "https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-13.txt",
-    "sha256": "78b71f9a4bcdf57fbce694b015ed22bcf5b71ff5263b8f8d57ae2bbcf6514cd2"
+    "url": "https://www.ietf.org/archive/id/draft-irtf-cfrg-bbs-signatures-14.txt",
+    "sha256": "ca04783ff6350eb7953d1e7fca44be8cba471742a901a9b4bb130357d06f13a4"
   },
   "upstream": {
     "repository": "decentralized-identity/bbs-signature",
-    "commit": "104bdcd85869ac05d1c621e064222441404e019b",
-    "selection": "Publisher snapshot including the domain-length and multi-exponentiation corrections present in numbered draft-13; all 30 SHA-256 fixtures match unchanged.",
+    "commit": "434522cf17ad970707080a62ce5ac19bcdb82acd",
+    "selection": "Publisher draft-14 history snapshot, including removal of the incorrect zero-message domain rejection; all 30 SHA-256 fixtures match unchanged.",
     "fixtureBasePath": "tooling/fixtures/fixture_data/bls12-381-sha-256",
     "artifacts": [
       {
         "path": "draft-irtf-cfrg-bbs-signatures.md",
-        "sha256": "d387aa6442b2594ae20574153db3b273ff8e92c51c5d599cc6a0fec293a05aad"
+        "sha256": "38208c1e0af25f3b56d14844af92d0db8acb4b063948eacc4cb8f808a6aedb55"
       },
       {
         "path": "tooling/fixtures/index.ts",
@@ -42,8 +42,8 @@
     "previousLabCommit": "de715f85a46ceb98b7cbbf013c451e193da78e07",
     "originalSourceRevision": "unknown",
     "preservation": "All 30 prior fixture byte sequences remain unchanged; previous provenance is retained in Git history.",
-    "previousBaselineId": "draft-12-sha256-20261012",
-    "previousBaselineCommit": "51e6c70b5d44cf01d7d75d7b63034f5f71b5cf90"
+    "previousBaselineId": "draft-13-sha256-20261014",
+    "previousBaselineCommit": "963e6f6635b2bb1c4915bff53fa4ed296872aa82"
   },
   "scope": {
     "suite": "BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_",
