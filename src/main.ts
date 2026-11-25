@@ -3,7 +3,8 @@ import { bytesToHex, ascii } from './bbs/ciphersuite'
 import {
   FIELD_KEYS,
   FIELD_LABELS,
-  cutoffDays,
+  dobToDays,
+  yearsBefore,
   type CredentialFields,
   type FieldKey,
   type Presentation,
@@ -114,24 +115,21 @@ async function guarded(out: HTMLElement, button: HTMLButtonElement, busyText: st
 // this page; the state below is plain data, structured-cloned per call.
 // ---------------------------------------------------------------------------
 
+const todayIso = new Date().toISOString().slice(0, 10)
+const cutoffIso = yearsBefore(todayIso, 18)
+const CUTOFF = dobToDays(cutoffIso)
+const rangeDays = 2 ** N_BITS - 1
+const earliestIso = new Date(Date.parse(cutoffIso) - rangeDays * 86_400_000).toISOString().slice(0, 10)
+
 const ADULT_FIELDS: CredentialFields = {
   name: 'Avery Stone',
-  dob: '1999-04-12',
+  dob: `${Number(todayIso.slice(0, 4)) - 27}-04-12`,
   address: '12 Elm St, Springfield',
   license: 'D1234-5678',
   class: 'C',
   expiry: '2030-01-01',
 }
-const MINOR_FIELDS: CredentialFields = { ...ADULT_FIELDS, name: 'Riley Stone', dob: '2010-06-01' }
-
-const todayIso = new Date().toISOString().slice(0, 10)
-const CUTOFF = cutoffDays(todayIso, 18)
-const cutoffIso = (() => {
-  const [y, m, d] = todayIso.split('-').map(Number)
-  const c = new Date(Date.UTC(y, m - 1, d))
-  c.setUTCFullYear(c.getUTCFullYear() - 18)
-  return c.toISOString().slice(0, 10)
-})()
+const MINOR_FIELDS: CredentialFields = { ...ADULT_FIELDS, name: 'Riley Stone', dob: yearsBefore(todayIso, 16) }
 
 const client = new CryptoClient()
 
@@ -208,7 +206,7 @@ function wireBaseline(): void {
         rawIndicator(`Ed25519 signature verifies: ${valid} — the credential is genuine.`),
         verdictIndicator(
           'alarm',
-          'PRIVACY BROKEN — the question was one bit ("over 18?"); the answer was all six fields plus a reusable signature. This is what today’s signed credentials do.',
+          'PRIVACY BROKEN — the question was one bit ("at least 18?"); the answer was all six fields plus a reusable signature. This is what today’s signed credentials do.',
         ),
       ]),
       statusLine(
@@ -632,7 +630,7 @@ function wireAge(): void {
         verdict.ok
           ? verdictIndicator(
               'ok',
-              `ACCEPT — the verifier learned exactly one bit: this credential's DOB is on or before ${cutoffIso}. Not the date, not the year, not "how far over 18".`,
+              `ACCEPT — the signed DOB is in the inclusive interval ${earliestIso} through ${cutoffIso}. The proof keeps the exact birth date hidden.`,
             )
           : verdictIndicator('alarm', 'REJECT — ' + verdict.reason),
       ]),
@@ -657,7 +655,7 @@ function wireAge(): void {
       el('div', { class: 'result-pair', role: 'status' }, [
         rawIndicator(
           threw
-            ? 'Proof generation threw RangeError: the bits of (cutoff − DOB) do not exist for a 2010 birth date.'
+            ? 'Proof generation threw RangeError: the example holder is 16 on the check date, so cutoff − DOB is negative.'
             : 'Unexpected: proof generation did not refuse.',
         ),
         threw
@@ -702,7 +700,7 @@ function wireAge(): void {
           ? verdictIndicator('alarm', 'FORGERY ACCEPTED — this must never happen; the primitive would be broken.')
           : verdictIndicator(
               'ok',
-              'REJECT — a real credential is not enough: the algebra refuses to say "over 18" about a 2010 birth date. The system fails the liar; the primitive holds.',
+              'REJECT — a real credential is not enough: the range check rejects the under-18 example. The system fails the liar; the primitive holds.',
             ),
       ]),
       statusLine(

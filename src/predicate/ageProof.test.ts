@@ -75,7 +75,12 @@ describe('age >= 18 predicate proof', () => {
     expect(verifyAge(issuer.pk, p2, CUTOFF).ok).toBe(true)
   })
 
-  it('range covers ~89 years of day counts', () => {
+  it('accepts a difference of 32,767 days and refuses 32,768', () => {
     expect(2 ** N_BITS).toBe(32768)
+    const dob = (days: number) => new Date(Date.UTC(2008, 6, 17) - days * 86_400_000).toISOString().slice(0, 10)
+    const oldest = issueBbs(issuer, { ...adultFields, dob: dob(32767) })
+    expect(verifyAge(issuer.pk, proveAge(oldest, CUTOFF), CUTOFF).ok).toBe(true)
+    const earlier = issueBbs(issuer, { ...adultFields, dob: dob(32768) })
+    expect(() => proveAge(earlier, CUTOFF)).toThrow(RangeError)
   })
 })

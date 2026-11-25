@@ -180,7 +180,9 @@ describe('property: date encoding invariants', () => {
 
   it('the 18-year cutoff is exactly 18 years before today (leap-safe check)', () => {
     expect(cutoffDays('2026-07-17', 18)).toBe(dobToDays('2008-07-17'))
-    expect(cutoffDays('2024-02-29', 18)).toBe(dobToDays('2006-03-01'))
+    expect(cutoffDays('2024-02-29', 18)).toBe(dobToDays('2006-02-28'))
+    expect(dobToDays('2006-03-01')).toBeGreaterThan(cutoffDays('2024-02-29', 18))
+    expect(cutoffDays('2024-03-01', 18)).toBe(dobToDays('2006-03-01'))
   })
 
   it('rejects malformed and out-of-range dates', () => {

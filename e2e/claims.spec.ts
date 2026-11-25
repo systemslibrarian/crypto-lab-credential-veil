@@ -53,7 +53,7 @@ const FIELD_COUNT = 6
 const CRED_INDEX = 17
 const STATUS_LIST_SIZE = 64
 
-const DOB = '1999-04-12'
+const DOB = `${new Date().getUTCFullYear() - 27}-04-12`
 const CRED_VALUES: Record<string, string> = {
   name: 'Avery Stone',
   dob: DOB,
@@ -412,23 +412,26 @@ test('exhibit 4 proves the predicate, refuses to lie, and rejects the forgery', 
   )
   const adultVerdict = verdictOf(page, '#age-out')
   await expect(adultVerdict).toHaveClass(/indicator-ok/)
-  await expect(adultVerdict).toContainText('learned exactly one bit')
+  await expect(adultVerdict).toContainText('keeps the exact birth date hidden')
 
   // The cutoff is stated twice; both must be the same date, and that date must
   // be exactly 18 years before today.
   const stated = adult.match(/the check date's cutoff \((\d{4}-\d{2}-\d{2})\)/)?.[1]
-  const inVerdict = adult.match(/DOB is on or before (\d{4}-\d{2}-\d{2})/)?.[1]
+  const interval = adult.match(/inclusive interval (\d{4}-\d{2}-\d{2}) through (\d{4}-\d{2}-\d{2})/)
+  const inVerdict = interval?.[2]
+  expect(interval).toBeTruthy()
+  expect((Date.parse(interval![2]) - Date.parse(interval![1])) / 86_400_000).toBe(32767)
   expect(stated, `age output read: ${adult}`).toBeTruthy()
   expect(inVerdict).toBe(stated)
   expect(Number((stated ?? '').slice(0, 4))).toBe(new Date().getUTCFullYear() - 18)
 
   // "No birth date anywhere" — the README's headline absence claim. The long
   // hex runs are masked out first: a random commitment can contain the digits
-  // "1999" by chance, which would be noise, not a leak.
+  // the birth year by chance, which would be noise, not a leak.
   const adultProse = adult.replace(/[0-9a-f]{32,}/g, '<hex>')
   expect(adultProse).toContain('No birth date anywhere')
   expect(adultProse).not.toContain(DOB)
-  expect(adultProse).not.toContain('1999')
+  expect(adultProse).not.toContain(DOB.slice(0, 4))
   expect(adultProse).not.toContain(CRED_VALUES.name)
 
   // The commitment is a real rendered point, not a placeholder.
@@ -440,7 +443,7 @@ test('exhibit 4 proves the predicate, refuses to lie, and rejects the forgery', 
   await rerender(page, '#age-out', () => page.locator('#age-minor').click())
   await expect(rawOf(page, '#age-out')).toContainText('RangeError', { timeout: 300_000 })
   await expect(rawOf(page, '#age-out')).toContainText(
-    'the bits of (cutoff − DOB) do not exist for a 2010 birth date',
+    'the example holder is 16 on the check date, so cutoff − DOB is negative',
   )
   const minorVerdict = verdictOf(page, '#age-out')
   await expect(minorVerdict).toHaveClass(/indicator-ok/)

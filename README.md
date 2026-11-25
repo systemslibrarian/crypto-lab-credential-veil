@@ -1,6 +1,6 @@
 # Credential Veil — crypto-lab
 
-Anonymous credentials with **BBS selective disclosure** over BLS12-381, in the browser. Prove you're over 18 from a signed credential containing your birth date — without showing the birth date, without showing the signature, and without the verifier being able to link this presentation to the last one.
+Anonymous credentials with **BBS selective disclosure** over BLS12-381, in the browser. Prove you're at least 18 from a signed credential containing your birth date — without showing the birth date, without showing the signature, and without the verifier being able to link this presentation to the last one.
 
 ## What It Is
 
@@ -31,10 +31,10 @@ One deliberate encoding deviation, for honesty: five credential fields are mappe
 
 ## Exhibits
 
-1. **The problem: all-or-nothing disclosure** — prove "over 18" with an Ed25519-signed credential and watch the verifier receive all six fields plus a reusable signature. Signature valid; privacy verdict: broken. The two indicators disagree on purpose.
+1. **The problem: all-or-nothing disclosure** — prove "at least 18" with an Ed25519-signed credential and watch the verifier receive all six fields plus a reusable signature. Signature valid; privacy verdict: broken. The two indicators disagree on purpose.
 2. **Selective disclosure (the headline)** — check exactly the fields to reveal; step through issuer-signs-once → holder-chooses → re-randomize-and-prove → verifier-checks-a-pairing, with the real artifacts at every step. The hidden fields aren't redacted on the verifier's side — they're *absent*, and the signature never appears. Then **break it yourself**: tamper a revealed value after proving and hand it to the real verifier.
 3. **Randomized presentations** — present the same credential three times; the page counts and highlights shared 8-byte runs and reports repeated disclosed values. Flip to Ed25519 to see the identical signature, three times. The byte comparison illustrates randomization; it cannot prove unlinkability or diagnose a privacy failure from a matching run.
-4. **Age ≥ 18 predicate** — a bit-decomposition range proof over a Pedersen commitment, challenge-linked into the BBS proof so the committed value *is* the signed DOB. The verifier learns one bit. Try it honestly with a 2010 birth date (no proof exists), then force a forgery and watch the real verifier separate "genuine signature" from "impossible transcript".
+4. **Age ≥ 18 predicate** — a bit-decomposition range proof over a Pedersen commitment, challenge-linked into the BBS proof so the committed value *is* the signed DOB. The 15-bit proof establishes an inclusive difference of 0 to 32,767 days between the public cutoff and the hidden birth date. Older adults outside that window need a wider proof. The underage example is 16 on the UTC check date. Try that credential honestly (no proof exists), then force a forgery and watch the real verifier separate "genuine signature" from "impossible transcript".
 5. **Revocation, the honest tension** — a real status-list bitstring. Revoke bit #17, check it as the verifier, and read the price: the index is a stable correlation handle that undoes the unlinkability you just saw. Stated, not solved.
 6. **What hides what, from whom** — BBS vs blind signatures (signer-blind at issuance, still all-or-nothing at showing) vs ring signatures (hides *who*, not *what*) vs plain JWT/mDL.
 

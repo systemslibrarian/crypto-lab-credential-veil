@@ -555,7 +555,7 @@ export async function driveAllStates(
   // ---- 7. exhibit 4 — all three age-predicate outcomes ---------------------
   await rerender('#age-out', () => page.click('#age-minor'));
   await expect(page.locator('#age-out .indicator-ok')).toBeVisible();
-  await scan(page, S('exhibit 4 — honest prover refuses for a 2010 DOB'));
+  await scan(page, S('exhibit 4 — honest prover refuses for the 16-year-old credential'));
 
   await rerender('#age-out', () => page.click('#age-forge'));
   await expect(page.locator('#age-out .verifier-view')).toBeVisible();

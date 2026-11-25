@@ -178,7 +178,7 @@
           <p class="cl-hero-sub">Anonymous credentials · BBS selective disclosure</p>
           <p class="cl-hero-desc">
             Signs one six-field credential with BBS over BLS12-381, then lets you reveal any subset of fields — or
-            just prove you're over 18 — while the verifier checks a proof that never contains the signature or the
+            just prove you're at least 18 — while the verifier checks a proof that never contains the signature or the
             hidden fields.
           </p>
         </div>
@@ -232,9 +232,9 @@
         <h2 id="baseline-h">1 · The problem: all-or-nothing disclosure</h2>
         <p>
           This is what a signed JWT or mobile driver's license does today. The credential is Ed25519-signed as one
-          blob. Try to prove just one thing — that you're over 18 — and watch what the verifier actually receives.
+          blob. Try to prove just one thing — that you're at least 18 — and watch what the verifier actually receives.
         </p>
-        <button id="baseline-run" type="button" disabled>Prove "over 18" the old way</button>
+        <button id="baseline-run" type="button" disabled>Prove "at least 18" the old way</button>
         <div id="baseline-out" class="exhibit-out"></div>
       </section>
 
@@ -293,16 +293,18 @@
       </section>
 
       <section class="panel" aria-labelledby="age-h">
-        <h2 id="age-h">4 · Predicate proof: "over 18" without a birth date</h2>
+        <h2 id="age-h">4 · Predicate proof: "at least 18" without a birth date</h2>
         <p>
           The credential's date of birth is signed as its day count, so the holder can prove
-          <code>DOB ≤ cutoff</code> with a bit-decomposition range proof linked into the BBS proof — the verifier
-          learns exactly one bit. Bulletproofs make the same statement logarithmically smaller; this lab uses the
+          <code>0 ≤ cutoff − DOB ≤ 32,767 days</code> with a 15-bit range proof linked to that credential.
+          The cutoff is the latest qualifying birth date. A passing proof reveals that the birth date falls within
+          this public interval and keeps its exact value hidden. Older adults outside the interval need a wider range.
+          Bulletproofs make the same statement logarithmically smaller; this lab uses the
           inspectable O(n) construction and links the sibling for the efficient one.
         </p>
         <div class="btn-row">
-          <button id="age-adult" type="button" disabled>Prove it (DOB 1999 — qualifies)</button>
-          <button id="age-minor" type="button" disabled>Try honestly with a 2010 DOB</button>
+          <button id="age-adult" type="button" disabled>Prove it with the adult credential</button>
+          <button id="age-minor" type="button" disabled>Try honestly with the 16-year-old credential</button>
           <button id="age-forge" type="button" disabled>Force a forged under-18 proof</button>
           <button id="age-cancel" type="button" hidden>Cancel this proof</button>
         </div>

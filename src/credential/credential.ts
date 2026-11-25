@@ -55,13 +55,15 @@ export function dobToDays(isoDate: string): number {
   return days
 }
 
-/** The cutoff for "age >= years as of `today`": latest birth date that qualifies. */
-export function cutoffDays(today: string, years: number): number {
+/** Subtract calendar years in UTC, clamping February 29 to the target month's last day. */
+export function yearsBefore(today: string, years: number): string {
   const [y, m, d] = today.split('-').map(Number)
-  const cutoff = new Date(Date.UTC(y, m - 1, d))
-  cutoff.setUTCFullYear(cutoff.getUTCFullYear() - years)
-  const iso = cutoff.toISOString().slice(0, 10)
-  return dobToDays(iso)
+  const lastDay = new Date(Date.UTC(y - years, m, 0)).getUTCDate()
+  return new Date(Date.UTC(y - years, m - 1, Math.min(d, lastDay))).toISOString().slice(0, 10)
+}
+
+export function cutoffDays(today: string, years: number): number {
+  return dobToDays(yearsBefore(today, years))
 }
 
 /** Map the six fields to BBS message scalars (DOB as raw integer scalar). */
